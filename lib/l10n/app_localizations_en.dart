@@ -847,7 +847,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mineUpdate => 'Check for Updates';
 
   @override
-  String get mineLanguageSettings => 'Language Settings';
+  String get mineLanguageSettings => 'Language';
 
   @override
   String get languageTitle => 'Language Settings';
@@ -901,6 +901,45 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mineProfileEditTitle => 'Edit profile';
+
+  @override
+  String get headerSkinTitle => 'Skin';
+
+  @override
+  String get headerSkinSubtitle => 'Follows your theme color, layered over the header';
+
+  @override
+  String get headerSkinNone => 'Solid';
+
+  @override
+  String get headerSkinAurora => 'Aurora';
+
+  @override
+  String get headerSkinMountains => 'Mountains';
+
+  @override
+  String get headerSkinBokeh => 'Bokeh';
+
+  @override
+  String get headerSkinWaves => 'Waves';
+
+  @override
+  String get headerSkinSunset => 'Sunset';
+
+  @override
+  String get headerSkinClouds => 'Clouds';
+
+  @override
+  String get headerSkinExample => 'Example';
+
+  @override
+  String get headerSkinHoneycomb => 'Honeycomb';
+
+  @override
+  String get headerSkinStarry => 'Starry';
+
+  @override
+  String get headerSkinStripes => 'Stripes';
 
   @override
   String get mineAvatarTitle => 'Avatar Settings';
@@ -1859,7 +1898,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get categoryIncomeProvidentFund => 'Provident Fund-Provident Fund Withdrawal-Provident Fund Interest';
 
   @override
-  String get personalizeTitle => 'Personalize';
+  String get personalizeTitle => 'Theme color';
+
+  @override
+  String get personalizeSubtitle => 'Pick or customize the app accent color';
 
   @override
   String get personalizeCustomColor => 'Choose custom color';

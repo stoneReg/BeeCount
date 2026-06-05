@@ -286,13 +286,6 @@ class _ConfigImportExportPageState
         logger.info('ConfigImport', '主题模式已刷新: $themeMode');
       }
 
-      // 刷新暗黑模式图案样式
-      final darkModePatternStyle = prefs.getString('darkModePatternStyle');
-      if (darkModePatternStyle != null) {
-        ref.read(darkModePatternStyleProvider.notifier).state = darkModePatternStyle;
-        logger.info('ConfigImport', '暗黑模式图案已刷新: $darkModePatternStyle');
-      }
-
       // 刷新字体缩放
       final fontScaleLevel = prefs.getInt('fontScaleLevel');
       if (fontScaleLevel != null) {
@@ -320,6 +313,12 @@ class _ConfigImportExportPageState
         logger.info('ConfigImport', '交易时间显示已刷新: $showTransactionTime');
       }
 
+      // 刷新头部皮肤
+      final headerSkin = prefs.getString('headerSkin');
+      if (headerSkin != null) {
+        ref.read(headerSkinProvider.notifier).state = headerSkin;
+        logger.info('ConfigImport', '头部皮肤已刷新: $headerSkin');
+      }
       logger.info('ConfigImport', 'Provider 状态刷新完成');
     } catch (e) {
       logger.error('ConfigImport', '刷新 Provider 状态失败: $e');

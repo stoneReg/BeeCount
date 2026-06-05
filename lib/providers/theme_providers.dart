@@ -43,22 +43,6 @@ final themeModeInitProvider = FutureProvider<void>((ref) async {
   });
 });
 
-// 暗黑模式下头部图案样式Provider
-// 可选值：'none'（无图案）、'icons'（图标平铺）、'particles'（粒子星星）、'honeycomb'（蜂巢六边形）
-final darkModePatternStyleProvider = StateProvider<String>((ref) => 'icons');
-
-// 暗黑模式图案样式持久化初始化
-final darkModePatternStyleInitProvider = FutureProvider<void>((ref) async {
-  final prefs = await SharedPreferences.getInstance();
-  final saved = prefs.getString('darkModePatternStyle');
-  if (saved != null) {
-    ref.read(darkModePatternStyleProvider.notifier).state = saved;
-  }
-  ref.listen<String>(darkModePatternStyleProvider, (prev, next) async {
-    await prefs.setString('darkModePatternStyle', next);
-  });
-});
-
 // 可变主色（个性化换装使用）
 final primaryColorProvider = StateProvider<Color>((ref) => BeeTheme.honeyGold);
 
@@ -194,6 +178,22 @@ final headerDecorationStyleInitProvider = FutureProvider<void>((ref) async {
   });
 });
 
+// 头部皮肤:跟随主题色的装饰层 id;'none' = 纯主题色。见 lib/styles/header_skins.dart。
+// 本地持久化 + 并入 appearance 包,随 BeeCount Cloud 多设备同步。
+final headerSkinProvider = StateProvider<String>((ref) => 'none');
+
+final headerSkinInitProvider = FutureProvider<void>((ref) async {
+  final prefs = await SharedPreferences.getInstance();
+  final saved = prefs.getString('headerSkin');
+  if (saved != null) {
+    ref.read(headerSkinProvider.notifier).state = saved;
+  }
+  ref.listen<String>(headerSkinProvider, (prev, next) async {
+    await prefs.setString('headerSkin', next);
+    _pushAppearanceToCloud(ref);
+  });
+});
+
 /// 把 header_decoration_style / compact_amount / show_transaction_time
 /// 的当前值打包推给 server 的 /profile/me。非 BeeCount Cloud 模式 provider
 /// 返回 null 直接跳过。fire-and-forget,失败只打 warning。
@@ -211,6 +211,7 @@ void _pushAppearanceToCloud(Ref ref) {
         'header_decoration_style': ref.read(headerDecorationStyleProvider),
         'compact_amount': ref.read(compactAmountProvider),
         'show_transaction_time': ref.read(showTransactionTimeProvider),
+        'header_skin': ref.read(headerSkinProvider),
       };
       await cloudProvider.updateMyProfileAppearance(appearance: appearance);
       logger.info('theme_providers',

@@ -250,6 +250,21 @@ See [docs/contributing/CONTRIBUTING.md](docs/contributing/CONTRIBUTING.md) for d
 
 ---
 
+## 🎨 Skins
+
+<details>
+<summary>Contribute a skin</summary>
+
+"Theme color + skin = the header banner." Skins come in two kinds: **code skins** (`CustomPainter` drawing gradients / shapes, auto-following the theme color) and **image skins** (an SVG painted edge-to-edge with `BoxFit.cover`, optionally recolored to the theme color via `themed: true`).
+
+Easiest path: copy [`example_skin.svg`](assets/header_skins/example_skin.svg) → drop your SVG into `assets/header_skins/` → register one entry in `lib/styles/header_skins.dart` → add an i18n name and run `flutter gen-l10n`.
+
+**Full spec (SVG requirements + theme recoloring + integration steps): [assets/header_skins/README_EN.md](assets/header_skins/README_EN.md).**
+
+</details>
+
+---
+
 ## 💬 FAQ
 
 <details>

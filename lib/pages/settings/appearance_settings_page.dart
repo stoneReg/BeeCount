@@ -10,6 +10,8 @@ import './font_settings_page.dart';
 import './language_settings_page.dart';
 import './widget_management_page.dart';
 import './app_lock_settings_page.dart';
+import './header_skin_page.dart';
+import '../../styles/header_skins.dart';
 import '../../l10n/app_localizations.dart';
 
 /// 外观设置二级页面
@@ -20,8 +22,6 @@ class AppearanceSettingsPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final currentLanguage = ref.watch(languageProvider);
     final themeMode = ref.watch(themeModeProvider);
-    final patternStyle = ref.watch(darkModePatternStyleProvider);
-    final isDark = BeeTokens.isDark(context);
     final l10n = AppLocalizations.of(context);
 
     String languageDisplay;
@@ -53,21 +53,11 @@ class AppearanceSettingsPage extends ConsumerWidget {
         themeModeDisplay = l10n.appearanceThemeModeSystem;
     }
 
-    // 图案样式显示文本
-    String patternDisplay;
-    switch (patternStyle) {
-      case 'none':
-        patternDisplay = l10n.appearancePatternNone;
-        break;
-      case 'particles':
-        patternDisplay = l10n.appearancePatternParticles;
-        break;
-      case 'honeycomb':
-        patternDisplay = l10n.appearancePatternHoneycomb;
-        break;
-      default:
-        patternDisplay = l10n.appearancePatternIcons;
-    }
+    // 头部皮肤显示名
+    final headerSkin = ref.watch(headerSkinProvider);
+    final skinDisplay = headerSkin == kHeaderSkinNone
+        ? l10n.headerSkinNone
+        : (headerSkinById(headerSkin)?.nameOf(l10n) ?? l10n.headerSkinNone);
 
     return Scaffold(
       backgroundColor: BeeTokens.scaffoldBackground(context),
@@ -82,7 +72,7 @@ class AppearanceSettingsPage extends ConsumerWidget {
             child: ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                // 显示设置 SectionCard
+                // 纯样式:外观模式 / 主题色 / 皮肤 / 显示缩放
                 SectionCard(
                   margin: EdgeInsets.zero,
                   child: Column(
@@ -95,15 +85,50 @@ class AppearanceSettingsPage extends ConsumerWidget {
                         onTap: () => _showThemeModeDialog(context, ref, l10n),
                       ),
                       BeeTokens.cardDivider(context),
-                      // 暗黑模式头部图案（仅暗黑模式下可用）
+                      // 主题色设置
                       AppListTile(
-                        leading: Icons.auto_awesome_outlined,
-                        title: l10n.appearanceDarkModePattern,
-                        subtitle: patternDisplay,
-                        enabled: isDark,
-                        onTap: isDark ? () => _showPatternStyleDialog(context, ref, l10n) : null,
+                        leading: Icons.brush_outlined,
+                        title: l10n.personalizeTitle,
+                        subtitle: l10n.personalizeSubtitle,
+                        onTap: () async {
+                          await Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const PersonalizePage()),
+                          );
+                        },
                       ),
                       BeeTokens.cardDivider(context),
+                      // 皮肤
+                      AppListTile(
+                        leading: Icons.wallpaper_outlined,
+                        title: l10n.headerSkinTitle,
+                        subtitle: skinDisplay,
+                        onTap: () async {
+                          await Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const HeaderSkinPage()),
+                          );
+                        },
+                      ),
+                      BeeTokens.cardDivider(context),
+                      // 显示缩放
+                      AppListTile(
+                        leading: Icons.zoom_out_map_outlined,
+                        title: l10n.mineDisplayScale,
+                        subtitle: l10n.mineDisplayScaleSubtitle,
+                        onTap: () async {
+                          await Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const FontSettingsPage()),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // 功能:金额格式 / 交易时间 / 收支配色(影响数据呈现,非纯外观)
+                SectionCard(
+                  margin: EdgeInsets.zero,
+                  child: Column(
+                    children: [
                       // 金额显示格式
                       AppListTile(
                         leading: Icons.money_outlined,
@@ -145,45 +170,11 @@ class AppearanceSettingsPage extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
+                // 通用:语言 / 桌面小组件 / 应用锁
                 SectionCard(
                   margin: EdgeInsets.zero,
                   child: Column(
                     children: [
-                      // 桌面小组件
-                      AppListTile(
-                        leading: Icons.widgets_outlined,
-                        title: l10n.widgetManagement,
-                        subtitle: l10n.widgetManagementDesc,
-                        onTap: () async {
-                          await Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => const WidgetManagementPage()),
-                          );
-                        },
-                      ),
-                      BeeTokens.cardDivider(context),
-                      // 个性化
-                      AppListTile(
-                        leading: Icons.brush_outlined,
-                        title: l10n.minePersonalize,
-                        onTap: () async {
-                          await Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => const PersonalizePage()),
-                          );
-                        },
-                      ),
-                      BeeTokens.cardDivider(context),
-                      // 显示缩放
-                      AppListTile(
-                        leading: Icons.zoom_out_map_outlined,
-                        title: l10n.mineDisplayScale,
-                        subtitle: l10n.mineDisplayScaleSubtitle,
-                        onTap: () async {
-                          await Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => const FontSettingsPage()),
-                          );
-                        },
-                      ),
-                      BeeTokens.cardDivider(context),
                       // 语言设置
                       AppListTile(
                         leading: Icons.language_outlined,
@@ -196,9 +187,19 @@ class AppearanceSettingsPage extends ConsumerWidget {
                         },
                       ),
                       BeeTokens.cardDivider(context),
-                      // 应用锁 — 之前在「数据管理」页面底部独占一个 section,
-                      // 跟"导入导出/清理"语义不搭。挪到个性化设置里作为应用
-                      // 偏好之一。
+                      // 桌面小组件
+                      AppListTile(
+                        leading: Icons.widgets_outlined,
+                        title: l10n.widgetManagement,
+                        subtitle: l10n.widgetManagementDesc,
+                        onTap: () async {
+                          await Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const WidgetManagementPage()),
+                          );
+                        },
+                      ),
+                      BeeTokens.cardDivider(context),
+                      // 应用锁
                       AppListTile(
                         leading: Icons.lock_outline,
                         title: l10n.appLockTitle,
@@ -290,88 +291,6 @@ class AppearanceSettingsPage extends ConsumerWidget {
           : null,
       onTap: () {
         ref.read(themeModeProvider.notifier).state = value;
-        Navigator.pop(context);
-      },
-    );
-  }
-
-  /// 显示图案样式选择对话框
-  void _showPatternStyleDialog(BuildContext context, WidgetRef ref, AppLocalizations l10n) {
-    final currentPattern = ref.read(darkModePatternStyleProvider);
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: BeeTokens.surfaceElevated(context),
-        title: Text(
-          l10n.appearanceDarkModePattern,
-          style: TextStyle(color: BeeTokens.textPrimary(context)),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildPatternOption(
-              context, ref,
-              title: l10n.appearancePatternNone,
-              value: 'none',
-              currentValue: currentPattern,
-              icon: Icons.block_outlined,
-            ),
-            _buildPatternOption(
-              context, ref,
-              title: l10n.appearancePatternIcons,
-              value: 'icons',
-              currentValue: currentPattern,
-              icon: Icons.grid_view_outlined,
-            ),
-            _buildPatternOption(
-              context, ref,
-              title: l10n.appearancePatternParticles,
-              value: 'particles',
-              currentValue: currentPattern,
-              icon: Icons.auto_awesome_outlined,
-            ),
-            _buildPatternOption(
-              context, ref,
-              title: l10n.appearancePatternHoneycomb,
-              value: 'honeycomb',
-              currentValue: currentPattern,
-              icon: Icons.hive_outlined,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPatternOption(
-    BuildContext context,
-    WidgetRef ref, {
-    required String title,
-    required String value,
-    required String currentValue,
-    required IconData icon,
-  }) {
-    final isSelected = value == currentValue;
-    final primaryColor = ref.watch(primaryColorProvider);
-
-    return ListTile(
-      leading: Icon(
-        icon,
-        color: isSelected ? primaryColor : BeeTokens.iconSecondary(context),
-      ),
-      title: Text(
-        title,
-        style: TextStyle(
-          color: isSelected ? primaryColor : BeeTokens.textPrimary(context),
-          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-        ),
-      ),
-      trailing: isSelected
-          ? Icon(Icons.check, color: primaryColor)
-          : null,
-      onTap: () {
-        ref.read(darkModePatternStyleProvider.notifier).state = value;
         Navigator.pop(context);
       },
     );

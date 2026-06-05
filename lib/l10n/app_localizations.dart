@@ -1623,7 +1623,7 @@ abstract class AppLocalizations {
   /// No description provided for @mineLanguageSettings.
   ///
   /// In en, this message translates to:
-  /// **'Language Settings'**
+  /// **'Language'**
   String get mineLanguageSettings;
 
   /// No description provided for @languageTitle.
@@ -1727,6 +1727,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Edit profile'**
   String get mineProfileEditTitle;
+
+  /// No description provided for @headerSkinTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Skin'**
+  String get headerSkinTitle;
+
+  /// No description provided for @headerSkinSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Follows your theme color, layered over the header'**
+  String get headerSkinSubtitle;
+
+  /// No description provided for @headerSkinNone.
+  ///
+  /// In en, this message translates to:
+  /// **'Solid'**
+  String get headerSkinNone;
+
+  /// No description provided for @headerSkinAurora.
+  ///
+  /// In en, this message translates to:
+  /// **'Aurora'**
+  String get headerSkinAurora;
+
+  /// No description provided for @headerSkinMountains.
+  ///
+  /// In en, this message translates to:
+  /// **'Mountains'**
+  String get headerSkinMountains;
+
+  /// No description provided for @headerSkinBokeh.
+  ///
+  /// In en, this message translates to:
+  /// **'Bokeh'**
+  String get headerSkinBokeh;
+
+  /// No description provided for @headerSkinWaves.
+  ///
+  /// In en, this message translates to:
+  /// **'Waves'**
+  String get headerSkinWaves;
+
+  /// No description provided for @headerSkinSunset.
+  ///
+  /// In en, this message translates to:
+  /// **'Sunset'**
+  String get headerSkinSunset;
+
+  /// No description provided for @headerSkinClouds.
+  ///
+  /// In en, this message translates to:
+  /// **'Clouds'**
+  String get headerSkinClouds;
+
+  /// No description provided for @headerSkinExample.
+  ///
+  /// In en, this message translates to:
+  /// **'Example'**
+  String get headerSkinExample;
+
+  /// No description provided for @headerSkinHoneycomb.
+  ///
+  /// In en, this message translates to:
+  /// **'Honeycomb'**
+  String get headerSkinHoneycomb;
+
+  /// No description provided for @headerSkinStarry.
+  ///
+  /// In en, this message translates to:
+  /// **'Starry'**
+  String get headerSkinStarry;
+
+  /// No description provided for @headerSkinStripes.
+  ///
+  /// In en, this message translates to:
+  /// **'Stripes'**
+  String get headerSkinStripes;
 
   /// No description provided for @mineAvatarTitle.
   ///
@@ -3531,8 +3609,14 @@ abstract class AppLocalizations {
   /// No description provided for @personalizeTitle.
   ///
   /// In en, this message translates to:
-  /// **'Personalize'**
+  /// **'Theme color'**
   String get personalizeTitle;
+
+  /// No description provided for @personalizeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick or customize the app accent color'**
+  String get personalizeSubtitle;
 
   /// No description provided for @personalizeCustomColor.
   ///

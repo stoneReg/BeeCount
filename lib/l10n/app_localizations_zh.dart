@@ -847,7 +847,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get mineUpdate => '检查更新';
 
   @override
-  String get mineLanguageSettings => '语言设置';
+  String get mineLanguageSettings => '语言';
 
   @override
   String get languageTitle => '语言设置';
@@ -901,6 +901,45 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get mineProfileEditTitle => '编辑资料';
+
+  @override
+  String get headerSkinTitle => '皮肤';
+
+  @override
+  String get headerSkinSubtitle => '跟随主题色,叠在头部之上';
+
+  @override
+  String get headerSkinNone => '纯色';
+
+  @override
+  String get headerSkinAurora => '极光';
+
+  @override
+  String get headerSkinMountains => '山峦';
+
+  @override
+  String get headerSkinBokeh => '光斑';
+
+  @override
+  String get headerSkinWaves => '波浪';
+
+  @override
+  String get headerSkinSunset => '日落';
+
+  @override
+  String get headerSkinClouds => '云朵';
+
+  @override
+  String get headerSkinExample => '示例';
+
+  @override
+  String get headerSkinHoneycomb => '蜂巢';
+
+  @override
+  String get headerSkinStarry => '星河';
+
+  @override
+  String get headerSkinStripes => '斜纹';
 
   @override
   String get mineAvatarTitle => '头像设置';
@@ -1859,7 +1898,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get categoryIncomeProvidentFund => '公积金-公积金提取-公积金利息';
 
   @override
-  String get personalizeTitle => '个性化';
+  String get personalizeTitle => '主题色';
+
+  @override
+  String get personalizeSubtitle => '选择或自定义应用主题色';
 
   @override
   String get personalizeCustomColor => '选择自定义颜色';
@@ -7415,7 +7457,7 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get mineUpdate => '檢查更新';
 
   @override
-  String get mineLanguageSettings => '語言設定';
+  String get mineLanguageSettings => '語言';
 
   @override
   String get languageTitle => '語言設定';
@@ -7469,6 +7511,45 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get mineProfileEditTitle => '編輯資料';
+
+  @override
+  String get headerSkinTitle => '皮膚';
+
+  @override
+  String get headerSkinSubtitle => '跟隨主題色,疊在頁首之上';
+
+  @override
+  String get headerSkinNone => '純色';
+
+  @override
+  String get headerSkinAurora => '極光';
+
+  @override
+  String get headerSkinMountains => '山巒';
+
+  @override
+  String get headerSkinBokeh => '光斑';
+
+  @override
+  String get headerSkinWaves => '波浪';
+
+  @override
+  String get headerSkinSunset => '日落';
+
+  @override
+  String get headerSkinClouds => '雲朵';
+
+  @override
+  String get headerSkinExample => '示例';
+
+  @override
+  String get headerSkinHoneycomb => '蜂巢';
+
+  @override
+  String get headerSkinStarry => '星河';
+
+  @override
+  String get headerSkinStripes => '斜紋';
 
   @override
   String get mineAvatarTitle => '頭像設定';
@@ -8427,7 +8508,10 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get categoryIncomeProvidentFund => '公積金-公積金提取-公積金利息';
 
   @override
-  String get personalizeTitle => '個性裝扮';
+  String get personalizeTitle => '主題色';
+
+  @override
+  String get personalizeSubtitle => '選擇或自訂應用主題色';
 
   @override
   String get personalizeCustomColor => '選擇自訂顏色';
