@@ -81,6 +81,23 @@
     }
   },
   "voiceRecordingNoSpeech": "未检测到语音输入",
+  "voiceRecordingTooShort": "说话时间太短",
+  "voiceRecordingHoldToTalk": "按住 说话",
+  "voiceRecordingReleaseToFinish": "松开 结束",
+  "smartBillingVoiceTrigger": "语音触发方式",
+  "voiceTriggerModeAuto": "自动检测停顿",
+  "voiceTriggerModeAutoDesc": "录音后自动判断说完，适合短句快速记账",
+  "voiceTriggerModeHold": "按住说话",
+  "voiceTriggerModeHoldDesc": "长按录音、松开结束，适合一次说较多内容",
+  "smartBillingVoiceSilenceTimeout": "停顿结束时长",
+  "smartBillingVoiceSilenceTimeoutValue": "停顿 {seconds} 秒后自动结束识别",
+  "@smartBillingVoiceSilenceTimeoutValue": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
   "commonPrevious": "上一步",
   "commonFinish": "完成",
   "commonClose": "关闭",
@@ -2506,6 +2523,11 @@
   "aiCapabilityImageUnderstandDesc": "用于图片账单识别",
   "aiCapabilitySpeechToText": "语音转文字",
   "aiCapabilitySpeechToTextDesc": "用于语音记账",
+  "aiAudioModeTitle": "语音识别模式",
+  "aiAudioModeTranscription": "传统转写（STT）",
+  "aiAudioModeTranscriptionDesc": "先转文字再提取账单，成本低、速度快",
+  "aiAudioModeMultimodal": "多模态理解",
+  "aiAudioModeMultimodalDesc": "音频直接交给大模型推理并直出账单，对口音更鲁棒，成本更高（需模型支持音频输入）",
   "aiProviderTestRun": "点击测试",
   "aiProviderTestRunning": "测试中...",
   "aiProviderTestSuccess": "测试通过",

@@ -84,6 +84,23 @@
     }
   },
   "voiceRecordingNoSpeech": "No speech detected",
+  "voiceRecordingTooShort": "Recording too short",
+  "voiceRecordingHoldToTalk": "Hold to talk",
+  "voiceRecordingReleaseToFinish": "Release to finish",
+  "smartBillingVoiceTrigger": "Voice trigger mode",
+  "voiceTriggerModeAuto": "Auto-detect pause",
+  "voiceTriggerModeAutoDesc": "Stops automatically after a pause; best for short entries",
+  "voiceTriggerModeHold": "Hold to talk",
+  "voiceTriggerModeHoldDesc": "Hold to record, release to stop; best for longer input",
+  "smartBillingVoiceSilenceTimeout": "Pause to finish",
+  "smartBillingVoiceSilenceTimeoutValue": "Auto-finish after a {seconds}s pause",
+  "@smartBillingVoiceSilenceTimeoutValue": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
   "commonPrevious": "Previous",
   "commonFinish": "Finish",
   "commonClose": "Close",
@@ -2559,6 +2576,11 @@
   "aiCapabilityImageUnderstandDesc": "For image bill recognition",
   "aiCapabilitySpeechToText": "Speech to Text",
   "aiCapabilitySpeechToTextDesc": "For voice billing",
+  "aiAudioModeTitle": "Voice recognition mode",
+  "aiAudioModeTranscription": "Transcription (STT)",
+  "aiAudioModeTranscriptionDesc": "Transcribe first, then extract; cheaper and faster",
+  "aiAudioModeMultimodal": "Multimodal understanding",
+  "aiAudioModeMultimodalDesc": "Send audio directly to the model to reason and output bills; more robust to accents, higher cost (requires audio-input support)",
   "aiProviderTestRun": "Tap to test",
   "aiProviderTestRunning": "Testing...",
   "aiProviderTestSuccess": "Test passed",

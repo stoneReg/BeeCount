@@ -155,6 +155,38 @@ class AppLocalizationsEn extends AppLocalizations {
   String get voiceRecordingNoSpeech => 'No speech detected';
 
   @override
+  String get voiceRecordingTooShort => 'Recording too short';
+
+  @override
+  String get voiceRecordingHoldToTalk => 'Hold to talk';
+
+  @override
+  String get voiceRecordingReleaseToFinish => 'Release to finish';
+
+  @override
+  String get smartBillingVoiceTrigger => 'Voice trigger mode';
+
+  @override
+  String get voiceTriggerModeAuto => 'Auto-detect pause';
+
+  @override
+  String get voiceTriggerModeAutoDesc => 'Stops automatically after a pause; best for short entries';
+
+  @override
+  String get voiceTriggerModeHold => 'Hold to talk';
+
+  @override
+  String get voiceTriggerModeHoldDesc => 'Hold to record, release to stop; best for longer input';
+
+  @override
+  String get smartBillingVoiceSilenceTimeout => 'Pause to finish';
+
+  @override
+  String smartBillingVoiceSilenceTimeoutValue(String seconds) {
+    return 'Auto-finish after a ${seconds}s pause';
+  }
+
+  @override
   String get commonPrevious => 'Previous';
 
   @override
@@ -5810,6 +5842,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aiCapabilitySpeechToTextDesc => 'For voice billing';
+
+  @override
+  String get aiAudioModeTitle => 'Voice recognition mode';
+
+  @override
+  String get aiAudioModeTranscription => 'Transcription (STT)';
+
+  @override
+  String get aiAudioModeTranscriptionDesc => 'Transcribe first, then extract; cheaper and faster';
+
+  @override
+  String get aiAudioModeMultimodal => 'Multimodal understanding';
+
+  @override
+  String get aiAudioModeMultimodalDesc => 'Send audio directly to the model to reason and output bills; more robust to accents, higher cost (requires audio-input support)';
 
   @override
   String get aiProviderTestRun => 'Tap to test';

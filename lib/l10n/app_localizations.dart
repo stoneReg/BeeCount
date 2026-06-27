@@ -372,6 +372,66 @@ abstract class AppLocalizations {
   /// **'No speech detected'**
   String get voiceRecordingNoSpeech;
 
+  /// No description provided for @voiceRecordingTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording too short'**
+  String get voiceRecordingTooShort;
+
+  /// No description provided for @voiceRecordingHoldToTalk.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold to talk'**
+  String get voiceRecordingHoldToTalk;
+
+  /// No description provided for @voiceRecordingReleaseToFinish.
+  ///
+  /// In en, this message translates to:
+  /// **'Release to finish'**
+  String get voiceRecordingReleaseToFinish;
+
+  /// No description provided for @smartBillingVoiceTrigger.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice trigger mode'**
+  String get smartBillingVoiceTrigger;
+
+  /// No description provided for @voiceTriggerModeAuto.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-detect pause'**
+  String get voiceTriggerModeAuto;
+
+  /// No description provided for @voiceTriggerModeAutoDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Stops automatically after a pause; best for short entries'**
+  String get voiceTriggerModeAutoDesc;
+
+  /// No description provided for @voiceTriggerModeHold.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold to talk'**
+  String get voiceTriggerModeHold;
+
+  /// No description provided for @voiceTriggerModeHoldDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold to record, release to stop; best for longer input'**
+  String get voiceTriggerModeHoldDesc;
+
+  /// No description provided for @smartBillingVoiceSilenceTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause to finish'**
+  String get smartBillingVoiceSilenceTimeout;
+
+  /// No description provided for @smartBillingVoiceSilenceTimeoutValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-finish after a {seconds}s pause'**
+  String smartBillingVoiceSilenceTimeoutValue(String seconds);
+
   /// No description provided for @commonPrevious.
   ///
   /// In en, this message translates to:
@@ -11105,6 +11165,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'For voice billing'**
   String get aiCapabilitySpeechToTextDesc;
+
+  /// No description provided for @aiAudioModeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice recognition mode'**
+  String get aiAudioModeTitle;
+
+  /// No description provided for @aiAudioModeTranscription.
+  ///
+  /// In en, this message translates to:
+  /// **'Transcription (STT)'**
+  String get aiAudioModeTranscription;
+
+  /// No description provided for @aiAudioModeTranscriptionDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Transcribe first, then extract; cheaper and faster'**
+  String get aiAudioModeTranscriptionDesc;
+
+  /// No description provided for @aiAudioModeMultimodal.
+  ///
+  /// In en, this message translates to:
+  /// **'Multimodal understanding'**
+  String get aiAudioModeMultimodal;
+
+  /// No description provided for @aiAudioModeMultimodalDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Send audio directly to the model to reason and output bills; more robust to accents, higher cost (requires audio-input support)'**
+  String get aiAudioModeMultimodalDesc;
 
   /// No description provided for @aiProviderTestRun.
   ///

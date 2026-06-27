@@ -2159,6 +2159,23 @@
   },
   "voiceRecordingNoLedger": "未找到當前帳本",
   "voiceRecordingNoSpeech": "未檢測到語音輸入",
+  "voiceRecordingTooShort": "說話時間太短",
+  "voiceRecordingHoldToTalk": "按住 說話",
+  "voiceRecordingReleaseToFinish": "鬆開 結束",
+  "smartBillingVoiceTrigger": "語音觸發方式",
+  "voiceTriggerModeAuto": "自動偵測停頓",
+  "voiceTriggerModeAutoDesc": "錄音後自動判斷說完，適合短句快速記帳",
+  "voiceTriggerModeHold": "按住說話",
+  "voiceTriggerModeHoldDesc": "長按錄音、鬆開結束，適合一次說較多內容",
+  "smartBillingVoiceSilenceTimeout": "停頓結束時長",
+  "smartBillingVoiceSilenceTimeoutValue": "停頓 {seconds} 秒後自動結束辨識",
+  "@smartBillingVoiceSilenceTimeoutValue": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
   "voiceRecordingPermissionDenied": "需要麥克風權限才能錄音",
   "voiceRecordingPermissionDeniedMessage": "語音記帳功能需要使用麥克風權限。請在系統設定中允許蜜蜂記帳存取麥克風。",
   "voiceRecordingPermissionDeniedTitle": "需要麥克風權限",
@@ -2305,6 +2322,11 @@
   "aiCapabilityImageUnderstandDesc": "用於圖片帳單識別",
   "aiCapabilitySpeechToText": "語音轉文字",
   "aiCapabilitySpeechToTextDesc": "用於語音記帳",
+  "aiAudioModeTitle": "語音辨識模式",
+  "aiAudioModeTranscription": "傳統轉寫（STT）",
+  "aiAudioModeTranscriptionDesc": "先轉文字再擷取帳單，成本低、速度快",
+  "aiAudioModeMultimodal": "多模態理解",
+  "aiAudioModeMultimodalDesc": "音訊直接交給大模型推理並直出帳單，對口音更穩健，成本較高（需模型支援音訊輸入）",
   "aiProviderTestRun": "點擊測試",
   "aiProviderTestRunning": "測試中...",
   "aiProviderTestSuccess": "測試通過",
