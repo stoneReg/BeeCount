@@ -113,9 +113,10 @@ class VoiceBillingHelper {
       // 2. 创建录音器
       final recorder = AudioRecorder();
 
-      // 3. 准备录音文件路径（使用 wav 格式，兼容更多服务商）
+      // 3. 准备录音文件路径（默认 m4a 压缩格式，减小多模态 base64 体积；
+      //    传统转写服务商对 m4a 兼容性也较好）
       final tempDir = await getTemporaryDirectory();
-      final audioPath = '${tempDir.path}/voice_${DateTime.now().millisecondsSinceEpoch}.wav';
+      final audioPath = '${tempDir.path}/voice_${DateTime.now().millisecondsSinceEpoch}.m4a';
 
       // 4. 显示录音对话框（按用户配置的触发方式：自动检测 / 按住说话）
       if (!context.mounted) return;
@@ -221,7 +222,7 @@ class _VoiceRecordingDialogState extends ConsumerState<_VoiceRecordingDialog> {
     try {
       await widget.recorder.start(
         const RecordConfig(
-          encoder: AudioEncoder.wav,  // 使用 wav 格式，兼容硅基流动等服务商
+          encoder: AudioEncoder.aacLc, // m4a(AAC-LC)，体积小、跨平台兼容好
         ),
         path: widget.audioPath,
       );

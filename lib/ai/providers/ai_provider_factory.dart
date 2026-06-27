@@ -138,6 +138,45 @@ class AIProviderFactory {
     }
   }
 
+  /// 当前语音能力服务商配置的识别模式（传统转写 / 多模态理解）。
+  /// 未配置时默认传统转写，保证存量行为不变。
+  static Future<AIAudioMode> resolveAudioMode() async {
+    final config = await AIProviderManager.getProviderForCapability(
+      AICapabilityType.speech,
+    );
+    return config?.audioMode ?? AIAudioMode.transcription;
+  }
+
+  /// 多模态语音理解（一步式）：把音频 + [prompt] 直接交给 chat 模型，
+  /// 返回模型文本（期望为账单 JSON）。仅在语音识别模式为多模态时调用。
+  static Future<String> audioChat(
+    File audio,
+    String prompt, {
+    String? logTag,
+  }) async {
+    final tag = logTag ?? 'AIFactory';
+
+    final config = await AIProviderManager.getProviderForCapability(
+      AICapabilityType.speech,
+    );
+
+    if (config == null || !config.isValid) {
+      throw AIException('未配置语音转文字服务商');
+    }
+    if (!config.supportsSpeech) {
+      throw AIException('服务商 ${config.name} 未配置语音模型');
+    }
+
+    logger.debug(
+        tag, '发起多模态语音理解 (${config.name}, 模型: ${config.audioModel})');
+
+    if (config.isBuiltIn) {
+      return _audioChatZhipu(config, audio, prompt);
+    } else {
+      return _audioChatOpenAI(config, audio, prompt);
+    }
+  }
+
   /// 验证当前文本服务商配置是否可用
   static Future<(bool success, String? error)> validateConfig({
     String? logTag,
@@ -449,6 +488,31 @@ class AIProviderFactory {
     return result.data!.trim();
   }
 
+  /// 智谱多模态：音频 + 提取 prompt 一步直出账单 JSON。
+  /// ZhipuGLMProvider 在含 audioFile 时已自动注入「返回 JSON」的 system 提示。
+  static Future<String> _audioChatZhipu(
+    AIServiceProviderConfig config,
+    File audio,
+    String prompt,
+  ) async {
+    final provider = ZhipuGLMProvider(
+      apiKey: config.apiKey,
+      model: config.audioModel,
+      audioFile: audio,
+      receiveTimeout: const Duration(seconds: 120),
+      sendTimeout: const Duration(seconds: 120),
+    );
+
+    final task = _SimpleTask(prompt);
+    final result = await provider.execute(task);
+
+    if (!result.success) {
+      throw AIException(result.error ?? '智谱GLM语音理解失败');
+    }
+
+    return result.data!.trim();
+  }
+
   // ============================================================
   // OpenAI 兼容实现
   // ============================================================
@@ -609,6 +673,65 @@ class AIProviderFactory {
     } on DioException catch (e) {
       throw AIException(_extractDioError(e));
     }
+  }
+
+  /// OpenAI 兼容多模态：chat/completions + input_audio，一步直出账单 JSON。
+  static Future<String> _audioChatOpenAI(
+    AIServiceProviderConfig config,
+    File audio,
+    String prompt,
+  ) async {
+    final dio = _getDio(config);
+
+    final audioBytes = await audio.readAsBytes();
+    final base64Audio = base64Encode(audioBytes);
+    final format = _audioFormatForPath(audio.path);
+
+    logger.debug('AIFactory',
+        '请求(多模态语音): ${config.baseUrl}/chat/completions, format=$format');
+
+    try {
+      final response = await dio.post(
+        '/chat/completions',
+        data: {
+          'model': config.audioModel,
+          'messages': [
+            {
+              'role': 'user',
+              'content': [
+                {'type': 'text', 'text': prompt},
+                {
+                  'type': 'input_audio',
+                  'input_audio': {
+                    'data': base64Audio,
+                    'format': format,
+                  },
+                },
+              ],
+            },
+          ],
+        },
+        // 音频较大、多模态推理较慢，放宽超时
+        options: Options(
+          sendTimeout: const Duration(seconds: 120),
+          receiveTimeout: const Duration(seconds: 120),
+        ),
+      );
+
+      final data = response.data as Map<String, dynamic>;
+      final choices = data['choices'] as List;
+      final message = choices.first['message'] as Map<String, dynamic>;
+      return (message['content'] as String).trim();
+    } on DioException catch (e) {
+      throw AIException(_extractDioError(e));
+    }
+  }
+
+  /// 由文件扩展名推断 input_audio 的 format。
+  /// 与内置 GLM 路径保持一致：wav 用 wav，其余（m4a/aac/mp3）统一按 mp3 上送。
+  static String _audioFormatForPath(String path) {
+    final ext = path.split('.').last.toLowerCase();
+    return ext == 'wav' ? 'wav' : 'mp3';
   }
 
   /// 提取 Dio 错误信息
