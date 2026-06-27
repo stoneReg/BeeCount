@@ -155,6 +155,38 @@ class AppLocalizationsEn extends AppLocalizations {
   String get voiceRecordingNoSpeech => 'No speech detected';
 
   @override
+  String get voiceRecordingTooShort => 'Recording too short';
+
+  @override
+  String get voiceRecordingHoldToTalk => 'Hold to talk';
+
+  @override
+  String get voiceRecordingReleaseToFinish => 'Release to finish';
+
+  @override
+  String get smartBillingVoiceTrigger => 'Voice trigger mode';
+
+  @override
+  String get voiceTriggerModeAuto => 'Auto-detect pause';
+
+  @override
+  String get voiceTriggerModeAutoDesc => 'Stops automatically after a pause; best for short entries';
+
+  @override
+  String get voiceTriggerModeHold => 'Hold to talk';
+
+  @override
+  String get voiceTriggerModeHoldDesc => 'Hold to record, release to stop; best for longer input';
+
+  @override
+  String get smartBillingVoiceSilenceTimeout => 'Pause to finish';
+
+  @override
+  String smartBillingVoiceSilenceTimeoutValue(String seconds) {
+    return 'Auto-finish after a ${seconds}s pause';
+  }
+
+  @override
   String get commonPrevious => 'Previous';
 
   @override

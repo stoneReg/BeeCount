@@ -7,6 +7,7 @@ import '../../widgets/biz/biz.dart';
 import '../../styles/tokens.dart';
 import '../../providers/smart_billing_providers.dart';
 import '../../providers/theme_providers.dart';
+import '../../providers/voice_billing_providers.dart';
 import '../ai/ai_settings_page.dart';
 import '../automation/auto_billing_settings_page.dart';
 import 'shortcuts_guide_page.dart';
@@ -117,6 +118,130 @@ class SmartBillingPage extends ConsumerWidget {
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
             child: Text(l10n.commonKnow),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 语音记账设置区：触发方式 + 自动检测下的静音时长滑块。
+  Widget _buildVoiceBillingSection(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final settings = ref.watch(voiceBillingSettingsProvider);
+    final isAuto = settings.triggerMode == VoiceTriggerMode.auto;
+    final seconds = (settings.silenceTimeoutMs / 1000).toStringAsFixed(1);
+
+    return SectionCard(
+      margin: EdgeInsets.zero,
+      child: Column(
+        children: [
+          // 触发方式
+          AppListTile(
+            leading: Icons.mic_none_outlined,
+            title: l10n.smartBillingVoiceTrigger,
+            subtitle: isAuto
+                ? l10n.voiceTriggerModeAuto
+                : l10n.voiceTriggerModeHold,
+            onTap: () => _showVoiceTriggerDialog(context, ref, settings.triggerMode),
+          ),
+          // 仅自动检测模式展示静音时长可调项
+          if (isAuto) ...[
+            BeeTokens.cardDivider(context),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: Row(
+                children: [
+                  Icon(Icons.timer_outlined,
+                      size: 20, color: ref.watch(primaryColorProvider)),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(l10n.smartBillingVoiceSilenceTimeout,
+                            style: const TextStyle(fontSize: 15)),
+                        Text(
+                          l10n.smartBillingVoiceSilenceTimeoutValue(seconds),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: BeeTokens.textTertiary(context),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Slider.adaptive(
+              value: settings.silenceTimeoutMs.toDouble(),
+              min: VoiceBillingSettings.minSilenceTimeoutMs.toDouble(),
+              max: VoiceBillingSettings.maxSilenceTimeoutMs.toDouble(),
+              divisions: (VoiceBillingSettings.maxSilenceTimeoutMs -
+                      VoiceBillingSettings.minSilenceTimeoutMs) ~/
+                  100,
+              activeColor: ref.watch(primaryColorProvider),
+              label: '${seconds}s',
+              onChanged: (value) {
+                ref
+                    .read(voiceBillingSettingsProvider.notifier)
+                    .setSilenceTimeoutMs(value.round());
+              },
+            ),
+            const SizedBox(height: 4),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// 触发方式选择弹窗
+  void _showVoiceTriggerDialog(
+    BuildContext context,
+    WidgetRef ref,
+    VoiceTriggerMode current,
+  ) {
+    final l10n = AppLocalizations.of(context);
+    final primaryColor = ref.read(primaryColorProvider);
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.smartBillingVoiceTrigger),
+        contentPadding: const EdgeInsets.symmetric(vertical: 8),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (final mode in VoiceTriggerMode.values)
+              RadioListTile<VoiceTriggerMode>(
+                value: mode,
+                groupValue: current,
+                activeColor: primaryColor,
+                title: Text(
+                  mode == VoiceTriggerMode.auto
+                      ? l10n.voiceTriggerModeAuto
+                      : l10n.voiceTriggerModeHold,
+                  style: const TextStyle(fontSize: 14),
+                ),
+                subtitle: Text(
+                  mode == VoiceTriggerMode.auto
+                      ? l10n.voiceTriggerModeAutoDesc
+                      : l10n.voiceTriggerModeHoldDesc,
+                  style: const TextStyle(fontSize: 12),
+                ),
+                onChanged: (value) async {
+                  if (value == null) return;
+                  Navigator.pop(dialogContext);
+                  await ref
+                      .read(voiceBillingSettingsProvider.notifier)
+                      .setTriggerMode(value);
+                },
+              ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(l10n.commonCancel),
           ),
         ],
       ),
@@ -316,6 +441,11 @@ class SmartBillingPage extends ConsumerWidget {
                     ],
                   ),
                 ),
+
+                const SizedBox(height: 16),
+
+                // 语音记账设置（触发方式 + 静音灵敏度）
+                _buildVoiceBillingSection(context, ref),
               ],
             ),
           ),
