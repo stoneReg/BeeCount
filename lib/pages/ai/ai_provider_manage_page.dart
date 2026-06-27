@@ -653,7 +653,7 @@ class _AIProviderEditPageState extends ConsumerState<AIProviderEditPage> {
     );
   }
 
-  /// 获取当前配置
+  /// 获取当前配置（测试用，保留已保存的 audioMode 等未在表单编辑的字段）
   AIServiceProviderConfig _getCurrentConfig() {
     return AIServiceProviderConfig(
       id: widget.provider?.id ?? 'test',
@@ -664,6 +664,7 @@ class _AIProviderEditPageState extends ConsumerState<AIProviderEditPage> {
       textModel: _textModelController.text,
       visionModel: _visionModelController.text,
       audioModel: _audioModelController.text,
+      audioMode: widget.provider?.audioMode ?? AIAudioMode.transcription,
       createdAt: widget.provider?.createdAt ?? DateTime.now(),
     );
   }
