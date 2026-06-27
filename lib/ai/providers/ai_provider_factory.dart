@@ -295,13 +295,15 @@ class AIProviderFactory {
     }
   }
 
-  /// 验证语音转文字能力
+  /// 验证语音能力（传统 STT 或多模态，按 [config.audioMode] 分流）。
   static Future<(bool success, String? error)> validateSpeechCapability(
     AIServiceProviderConfig config, {
     String? logTag,
   }) async {
     final tag = logTag ?? 'AIFactory';
-    logger.info(tag, '验证语音能力: ${config.name}');
+    final isMultimodal = config.audioMode == AIAudioMode.multimodalChat;
+    logger.info(tag,
+        '验证语音能力: ${config.name} (模式: ${isMultimodal ? "多模态" : "传统转写"})');
     logger.debug(tag, '  Base URL: ${config.baseUrl}');
     logger.debug(tag, '  模型: ${config.audioModel}');
 
@@ -321,7 +323,11 @@ class AIProviderFactory {
       await testAudio.writeAsBytes(testAudioBytes);
 
       try {
-        if (config.isBuiltIn) {
+        if (isMultimodal) {
+          // 多模态：走 chat/completions + input_audio，与正式记账路径一致
+          const testPrompt = '请识别这段音频的内容。若无有效语音，回复「无内容」。';
+          await audioChat(testAudio, testPrompt, logTag: tag);
+        } else if (config.isBuiltIn) {
           await _speechToTextZhipu(config, testAudio);
         } else {
           await _speechToTextOpenAI(config, testAudio);
