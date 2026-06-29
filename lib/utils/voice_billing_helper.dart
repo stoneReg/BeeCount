@@ -9,6 +9,7 @@ import '../l10n/app_localizations.dart';
 import '../providers.dart';
 import '../providers/ai_chat_providers.dart';
 import '../providers/ai_config_providers.dart';
+import '../providers/voice_billing_providers.dart';
 import '../services/system/logger_service.dart';
 import '../ai/providers/ai_provider_manager.dart';
 import '../ai/providers/ai_provider_config.dart';
@@ -29,6 +30,7 @@ class VoiceBillingHelper {
     try {
       // 0. 确保 AI 配置已加载完成（修复首次使用报错问题）
       await ref.read(aiConfigProvider.notifier).ensureLoaded();
+      await ref.read(voiceBillingSettingsProvider.notifier).ensureLoaded();
 
       // 检查AI是否启用
       final aiConfig = ref.read(aiConfigProvider);
@@ -110,18 +112,21 @@ class VoiceBillingHelper {
       // 2. 创建录音器
       final recorder = AudioRecorder();
 
-      // 3. 准备录音文件路径（使用 wav 格式，兼容更多服务商）
+      // 3. 准备录音文件路径（WAV，兼容传统 STT /audio/transcriptions）
       final tempDir = await getTemporaryDirectory();
-      final audioPath = '${tempDir.path}/voice_${DateTime.now().millisecondsSinceEpoch}.wav';
+      final audioPath =
+          '${tempDir.path}/voice_${DateTime.now().millisecondsSinceEpoch}.wav';
 
-      // 4. 显示录音对话框
+      // 4. 显示录音对话框（自动检测模式）
       if (!context.mounted) return;
+      final settings = ref.read(voiceBillingSettingsProvider);
       showDialog(
         context: context,
         barrierDismissible: false,
         builder: (dialogContext) => _VoiceRecordingDialog(
           audioPath: audioPath,
           recorder: recorder,
+          silenceTimeoutMs: settings.silenceTimeoutMs,
         ),
       );
     } catch (e) {
@@ -136,28 +141,45 @@ class _VoiceRecordingDialog extends ConsumerStatefulWidget {
   final String audioPath;
   final AudioRecorder recorder;
 
+  /// 自动检测模式下的静音判定阈值（毫秒）
+  final int silenceTimeoutMs;
+
   const _VoiceRecordingDialog({
     required this.audioPath,
     required this.recorder,
+    required this.silenceTimeoutMs,
   });
 
   @override
-  ConsumerState<_VoiceRecordingDialog> createState() => _VoiceRecordingDialogState();
+  ConsumerState<_VoiceRecordingDialog> createState() =>
+      _VoiceRecordingDialogState();
 }
 
 class _VoiceRecordingDialogState extends ConsumerState<_VoiceRecordingDialog> {
+  /// 起始静音判定（开场多少秒无语音则认为"没说话"）
+  static const int _kStartSilenceTimeoutSec = 3;
+
+  /// 最长录音时长上限（秒），防止静音检测失效导致永不停止
+  static const int _kMaxRecordingSec = 60;
+
+  /// 音量归一化阈值（约 -25dB），超过才计入"有声"
+  static const double _kSoundThreshold = 0.58;
+
+  /// 连续多少帧（每帧 100ms）有声才判定"开始说话"
+  static const int _kConsecutiveSoundFrames = 5;
+
   bool _isRecording = false;
   bool _isProcessing = false;
   String? _status;
   String? _recognizedText;
   int _duration = 0;
   double _amplitude = 0.0;
-  double _currentDb = -60.0;
   DateTime? _lastSoundTime;
   bool _hasSpoken = false;
   int _consecutiveSoundCount = 0;
   Timer? _silenceTimer;
   Timer? _amplitudeTimer;
+  DateTime? _recordStartTime;
 
   @override
   void initState() {
@@ -181,16 +203,18 @@ class _VoiceRecordingDialogState extends ConsumerState<_VoiceRecordingDialog> {
     try {
       await widget.recorder.start(
         const RecordConfig(
-          encoder: AudioEncoder.wav,  // 使用 wav 格式，兼容硅基流动等服务商
+          encoder: AudioEncoder.wav,
         ),
         path: widget.audioPath,
       );
 
       if (!mounted) return;
+      final now = DateTime.now();
       setState(() {
         _isRecording = true;
         _status = l10n.voiceRecordingInProgress;
-        _lastSoundTime = DateTime.now();
+        _lastSoundTime = now;
+        _recordStartTime = now;
       });
 
       _startTimer();
@@ -212,7 +236,8 @@ class _VoiceRecordingDialogState extends ConsumerState<_VoiceRecordingDialog> {
   }
 
   void _startAmplitudeMonitoring() {
-    _amplitudeTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) async {
+    _amplitudeTimer =
+        Timer.periodic(const Duration(milliseconds: 100), (timer) async {
       if (!mounted || !_isRecording) {
         timer.cancel();
         return;
@@ -228,19 +253,14 @@ class _VoiceRecordingDialogState extends ConsumerState<_VoiceRecordingDialog> {
         final current = amplitude.current;
         final normalizedAmplitude = ((current + 60) / 60).clamp(0.0, 1.0);
 
-        setState(() {
-          _currentDb = current;
-        });
-
-        const soundThreshold = 0.58; // 对应 -25dB
-        if (normalizedAmplitude > soundThreshold) {
+        if (normalizedAmplitude > _kSoundThreshold) {
           _consecutiveSoundCount++;
 
           setState(() {
             _amplitude = normalizedAmplitude;
           });
 
-          if (_consecutiveSoundCount >= 5) {
+          if (_consecutiveSoundCount >= _kConsecutiveSoundFrames) {
             _lastSoundTime = DateTime.now();
             if (!_hasSpoken) {
               setState(() {
@@ -256,7 +276,7 @@ class _VoiceRecordingDialogState extends ConsumerState<_VoiceRecordingDialog> {
           });
         }
       } catch (e) {
-        // 忽略错误
+        // 忽略振幅读取错误
       }
     });
   }
@@ -272,8 +292,22 @@ class _VoiceRecordingDialogState extends ConsumerState<_VoiceRecordingDialog> {
 
       final now = DateTime.now();
 
+      // 最长录音保护：即便静音检测失效，超过上限也强制结束送识别
+      final recordStart = _recordStartTime ?? startTime;
+      if (now.difference(recordStart).inSeconds >= _kMaxRecordingSec) {
+        timer.cancel();
+        if (_hasSpoken) {
+          _stopAndProcess();
+        } else if (mounted) {
+          final l10n = AppLocalizations.of(context);
+          Navigator.of(context).pop();
+          showToast(context, l10n.voiceRecordingNoSpeech);
+        }
+        return;
+      }
+
       if (!_hasSpoken) {
-        if (now.difference(startTime).inSeconds >= 3) {
+        if (now.difference(startTime).inSeconds >= _kStartSilenceTimeoutSec) {
           timer.cancel();
           if (mounted) {
             final l10n = AppLocalizations.of(context);
@@ -283,7 +317,9 @@ class _VoiceRecordingDialogState extends ConsumerState<_VoiceRecordingDialog> {
         }
       } else {
         final lastSound = _lastSoundTime;
-        if (lastSound != null && now.difference(lastSound).inMilliseconds >= 800) {
+        if (lastSound != null &&
+            now.difference(lastSound).inMilliseconds >=
+                widget.silenceTimeoutMs) {
           timer.cancel();
           _stopAndProcess();
         }
@@ -324,7 +360,6 @@ class _VoiceRecordingDialogState extends ConsumerState<_VoiceRecordingDialog> {
 
       if (!mounted) return;
 
-      // 把识别文字立即展示出来,让用户能看到「机器听到了什么」
       if (response.recognizedText != null) {
         setState(() {
           _recognizedText = response.recognizedText;
@@ -334,7 +369,6 @@ class _VoiceRecordingDialogState extends ConsumerState<_VoiceRecordingDialog> {
 
       if (!response.result.success) {
         Navigator.of(context).pop();
-        // 识别有文字但没提取出账单 → 展示原文给用户;完全没识别到 → 通用失败
         final msg = response.recognizedText != null
             ? l10n.voiceRecordingNoInfoDetected(response.recognizedText!)
             : l10n.voiceRecordingNoInfo;
@@ -382,10 +416,13 @@ class _VoiceRecordingDialogState extends ConsumerState<_VoiceRecordingDialog> {
                   height: 60 + (_amplitude * 40),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: ref.watch(primaryColorProvider).withValues(alpha: 0.3),
+                    color:
+                        ref.watch(primaryColorProvider).withValues(alpha: 0.3),
                     boxShadow: [
                       BoxShadow(
-                        color: ref.watch(primaryColorProvider).withValues(alpha: 0.5),
+                        color: ref
+                            .watch(primaryColorProvider)
+                            .withValues(alpha: 0.5),
                         blurRadius: 10 + (_amplitude * 20),
                         spreadRadius: _amplitude * 10,
                       ),
@@ -406,7 +443,8 @@ class _VoiceRecordingDialogState extends ConsumerState<_VoiceRecordingDialog> {
               _hasSpoken ? '说完后停顿即可自动识别' : '请开始说话...',
               style: TextStyle(
                 fontSize: 14,
-                color: _hasSpoken ? ref.watch(primaryColorProvider) : Colors.grey,
+                color:
+                    _hasSpoken ? ref.watch(primaryColorProvider) : Colors.grey,
                 fontWeight: _hasSpoken ? FontWeight.bold : FontWeight.normal,
               ),
             ),
@@ -414,23 +452,6 @@ class _VoiceRecordingDialogState extends ConsumerState<_VoiceRecordingDialog> {
             Text(
               l10n.voiceRecordingDuration(_duration),
               style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'dB: ${_currentDb.toStringAsFixed(1)} | 归一化: ${_amplitude.toStringAsFixed(2)} | 阈值: 0.58',
-              style: TextStyle(
-                fontSize: 10,
-                color: _amplitude > 0.58 ? Colors.green : Colors.grey,
-                fontFamily: 'monospace',
-              ),
-            ),
-            Text(
-              '连续检测: $_consecutiveSoundCount/5',
-              style: TextStyle(
-                fontSize: 10,
-                color: Colors.grey[500],
-                fontFamily: 'monospace',
-              ),
             ),
           ],
           if (_isProcessing) ...[
@@ -444,9 +465,7 @@ class _VoiceRecordingDialogState extends ConsumerState<_VoiceRecordingDialog> {
                 decoration: BoxDecoration(
                   color: BeeTokens.surface(context),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: BeeTokens.border(context),
-                  ),
+                  border: Border.all(color: BeeTokens.border(context)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'ai_provider_config.dart';
+import 'ai_constants.dart';
 import '../../services/system/logger_service.dart';
 
 /// AI 服务商管理服务
@@ -258,6 +259,8 @@ class AIProviderManager {
       'bill_extraction_enabled':
           prefs.getBool('ai_bill_extraction_enabled') ?? false,
       'use_vision': prefs.getBool('ai_use_vision') ?? false,
+      'voice_silence_timeout_ms':
+          prefs.getInt(AIConstants.keyVoiceSilenceTimeoutMs),
     };
   }
 
@@ -303,6 +306,16 @@ class AIProviderManager {
     final useVision = config['use_vision'] as bool?;
     if (useVision != null && prefs.getBool('ai_use_vision') != useVision) {
       await prefs.setBool('ai_use_vision', useVision);
+    }
+
+    // 静音阈值（仅当与本地不同才写，避免触发同步回环）
+    final voiceSilenceTimeout =
+        (config['voice_silence_timeout_ms'] as num?)?.toInt();
+    if (voiceSilenceTimeout != null &&
+        prefs.getInt(AIConstants.keyVoiceSilenceTimeoutMs) !=
+            voiceSilenceTimeout) {
+      await prefs.setInt(
+          AIConstants.keyVoiceSilenceTimeoutMs, voiceSilenceTimeout);
     }
     logger.info(_tag, 'AI 配置已从 server 应用到本地');
   }
