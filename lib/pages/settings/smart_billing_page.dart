@@ -7,6 +7,7 @@ import '../../widgets/biz/biz.dart';
 import '../../styles/tokens.dart';
 import '../../providers/smart_billing_providers.dart';
 import '../../providers/theme_providers.dart';
+import '../../providers/voice_billing_providers.dart';
 import '../ai/ai_settings_page.dart';
 import '../automation/auto_billing_settings_page.dart';
 import 'shortcuts_guide_page.dart';
@@ -316,9 +317,91 @@ class SmartBillingPage extends ConsumerWidget {
                     ],
                   ),
                 ),
+
+                const SizedBox(height: 16),
+
+                // 语音记账：自动检测静音判定时长
+                const _VoiceSilenceTimeoutSection(),
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 静音判定时长滑块：拖动时仅更新本地预览，松手后持久化并触发云同步
+class _VoiceSilenceTimeoutSection extends ConsumerStatefulWidget {
+  const _VoiceSilenceTimeoutSection();
+
+  @override
+  ConsumerState<_VoiceSilenceTimeoutSection> createState() =>
+      _VoiceSilenceTimeoutSectionState();
+}
+
+class _VoiceSilenceTimeoutSectionState
+    extends ConsumerState<_VoiceSilenceTimeoutSection> {
+  /// 拖动中的临时值；null 表示使用 provider 中的已保存值
+  int? _dragValueMs;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final settings = ref.watch(voiceBillingSettingsProvider);
+    final displayMs = _dragValueMs ?? settings.silenceTimeoutMs;
+    final seconds = (displayMs / 1000).toStringAsFixed(1);
+
+    return SectionCard(
+      margin: EdgeInsets.zero,
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: Row(
+              children: [
+                Icon(Icons.timer_outlined,
+                    size: 20, color: ref.watch(primaryColorProvider)),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(l10n.smartBillingVoiceSilenceTimeout,
+                          style: const TextStyle(fontSize: 15)),
+                      Text(
+                        l10n.smartBillingVoiceSilenceTimeoutValue(seconds),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: BeeTokens.textTertiary(context),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Slider.adaptive(
+            value: displayMs.toDouble(),
+            min: VoiceBillingSettings.minSilenceTimeoutMs.toDouble(),
+            max: VoiceBillingSettings.maxSilenceTimeoutMs.toDouble(),
+            divisions: (VoiceBillingSettings.maxSilenceTimeoutMs -
+                    VoiceBillingSettings.minSilenceTimeoutMs) ~/
+                100,
+            activeColor: ref.watch(primaryColorProvider),
+            label: '${seconds}s',
+            onChanged: (value) {
+              setState(() => _dragValueMs = value.round());
+            },
+            onChangeEnd: (value) async {
+              setState(() => _dragValueMs = null);
+              await ref
+                  .read(voiceBillingSettingsProvider.notifier)
+                  .setSilenceTimeoutMs(value.round());
+            },
+          ),
+          const SizedBox(height: 4),
         ],
       ),
     );

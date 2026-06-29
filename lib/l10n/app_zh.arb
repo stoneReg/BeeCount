@@ -81,6 +81,15 @@
     }
   },
   "voiceRecordingNoSpeech": "未检测到语音输入",
+  "smartBillingVoiceSilenceTimeout": "停顿结束时长",
+  "smartBillingVoiceSilenceTimeoutValue": "停顿 {seconds} 秒后自动结束识别",
+  "@smartBillingVoiceSilenceTimeoutValue": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
   "commonPrevious": "上一步",
   "commonFinish": "完成",
   "commonClose": "关闭",
@@ -140,10 +149,10 @@
   "@searchBatchModeWithCount": {
     "placeholders": {
       "selected": {
-        "type": "int"
+        "type": "Object"
       },
       "total": {
-        "type": "int"
+        "type": "Object"
       }
     }
   },

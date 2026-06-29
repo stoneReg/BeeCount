@@ -16,6 +16,7 @@ import '../models/ledger_display_item.dart';
 import '../ai/providers/ai_provider_manager.dart';
 import '../pages/ai/ai_provider_manage_page.dart' show aiProviderListRefreshProvider;
 import 'ai_config_providers.dart';
+import 'voice_billing_providers.dart';
 import '../services/attachment_service.dart' show attachmentListRefreshProvider;
 import '../services/system/logger_service.dart';
 import '../services/ui/avatar_service.dart';
@@ -272,6 +273,7 @@ final syncServiceProvider = Provider<SyncService>((ref) {
                       .state++;
                   ref.read(aiProviderListRefreshProvider.notifier).state++;
                   ref.invalidate(aiConfigProvider);
+                  ref.invalidate(voiceBillingSettingsProvider);
                 } catch (e, st) {
                   logger.warning(
                       'CloudSync', 'AI 配置 apply 后 UI bump 失败: $e', st);

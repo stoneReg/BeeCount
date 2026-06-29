@@ -155,6 +155,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get voiceRecordingNoSpeech => 'No speech detected';
 
   @override
+  String get smartBillingVoiceSilenceTimeout => 'Pause to finish';
+
+  @override
+  String smartBillingVoiceSilenceTimeoutValue(String seconds) {
+    return 'Auto-finish after a ${seconds}s pause';
+  }
+
+  @override
   String get commonPrevious => 'Previous';
 
   @override

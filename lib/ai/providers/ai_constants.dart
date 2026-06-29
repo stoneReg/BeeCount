@@ -12,6 +12,9 @@ class AIConstants {
   static const String keyAiUseVision = 'ai_use_vision';
   static const String keyAiCustomPrompt = 'ai_custom_prompt';
 
+  /// 自动检测模式下「停顿多久判定说完」的毫秒阈值（多设备同步，见 AIProviderManager）
+  static const String keyVoiceSilenceTimeoutMs = 'voice_silence_timeout_ms';
+
   // OpenAI 兼容协议配置
   static const String keyAiServiceProvider = 'ai_service_provider';
   static const String keyCustomBaseUrl = 'ai_custom_base_url';

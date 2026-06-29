@@ -155,6 +155,14 @@ class AppLocalizationsZh extends AppLocalizations {
   String get voiceRecordingNoSpeech => '未检测到语音输入';
 
   @override
+  String get smartBillingVoiceSilenceTimeout => '停顿结束时长';
+
+  @override
+  String smartBillingVoiceSilenceTimeoutValue(String seconds) {
+    return '停顿 $seconds 秒后自动结束识别';
+  }
+
+  @override
   String get commonPrevious => '上一步';
 
   @override
@@ -6996,6 +7004,14 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get voiceRecordingNoSpeech => '未檢測到語音輸入';
+
+  @override
+  String get smartBillingVoiceSilenceTimeout => '停頓結束時長';
+
+  @override
+  String smartBillingVoiceSilenceTimeoutValue(String seconds) {
+    return '停頓 $seconds 秒後自動結束辨識';
+  }
 
   @override
   String get commonPrevious => '上一步';

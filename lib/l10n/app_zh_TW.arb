@@ -2159,6 +2159,15 @@
   },
   "voiceRecordingNoLedger": "未找到當前帳本",
   "voiceRecordingNoSpeech": "未檢測到語音輸入",
+  "smartBillingVoiceSilenceTimeout": "停頓結束時長",
+  "smartBillingVoiceSilenceTimeoutValue": "停頓 {seconds} 秒後自動結束辨識",
+  "@smartBillingVoiceSilenceTimeoutValue": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
   "voiceRecordingPermissionDenied": "需要麥克風權限才能錄音",
   "voiceRecordingPermissionDeniedMessage": "語音記帳功能需要使用麥克風權限。請在系統設定中允許蜜蜂記帳存取麥克風。",
   "voiceRecordingPermissionDeniedTitle": "需要麥克風權限",

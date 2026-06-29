@@ -84,6 +84,15 @@
     }
   },
   "voiceRecordingNoSpeech": "No speech detected",
+  "smartBillingVoiceSilenceTimeout": "Pause to finish",
+  "smartBillingVoiceSilenceTimeoutValue": "Auto-finish after a {seconds}s pause",
+  "@smartBillingVoiceSilenceTimeoutValue": {
+    "placeholders": {
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
   "commonPrevious": "Previous",
   "commonFinish": "Finish",
   "commonClose": "Close",
