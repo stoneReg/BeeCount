@@ -7,12 +7,47 @@ import '../ai/providers/ai_constants.dart';
 import '../ai/providers/ai_provider_manager.dart';
 import '../services/system/logger_service.dart';
 
-/// 语音记账设置数据（PR A：仅静音阈值；触发方式在 PR B 扩展）
+/// 语音记账触发方式
+enum VoiceTriggerMode {
+  /// 自动检测：录音后靠静音检测自动判定说完
+  auto,
+
+  /// 按住说话：长按录音、松手结束（类似微信发语音）
+  holdToTalk,
+}
+
+/// 触发方式与字符串互转（用于持久化与多设备同步）
+extension VoiceTriggerModeCodec on VoiceTriggerMode {
+  String get storageValue {
+    switch (this) {
+      case VoiceTriggerMode.auto:
+        return 'auto';
+      case VoiceTriggerMode.holdToTalk:
+        return 'hold_to_talk';
+    }
+  }
+
+  static VoiceTriggerMode fromStorage(String? value) {
+    switch (value) {
+      case 'hold_to_talk':
+        return VoiceTriggerMode.holdToTalk;
+      case 'auto':
+      default:
+        return VoiceTriggerMode.auto;
+    }
+  }
+}
+
+/// 语音记账设置数据
 class VoiceBillingSettings {
+  /// 触发方式
+  final VoiceTriggerMode triggerMode;
+
   /// 自动检测模式下的静音判定阈值（毫秒）
   final int silenceTimeoutMs;
 
   const VoiceBillingSettings({
+    this.triggerMode = VoiceTriggerMode.auto,
     this.silenceTimeoutMs = defaultSilenceTimeoutMs,
   });
 
@@ -25,17 +60,18 @@ class VoiceBillingSettings {
   /// 静音阈值可调上限（毫秒）
   static const int maxSilenceTimeoutMs = 4000;
 
-  VoiceBillingSettings copyWith({int? silenceTimeoutMs}) {
+  VoiceBillingSettings copyWith({
+    VoiceTriggerMode? triggerMode,
+    int? silenceTimeoutMs,
+  }) {
     return VoiceBillingSettings(
+      triggerMode: triggerMode ?? this.triggerMode,
       silenceTimeoutMs: silenceTimeoutMs ?? this.silenceTimeoutMs,
     );
   }
 }
 
 /// 语音记账设置 Notifier
-///
-/// 配置落 SharedPreferences，并随 AI 配置一起做多设备同步（见
-/// [AIProviderManager.snapshotForSync] / [AIProviderManager.applyFromServer]）。
 class VoiceBillingSettingsNotifier extends StateNotifier<VoiceBillingSettings> {
   final Completer<void> _loadCompleter = Completer<void>();
 
@@ -43,18 +79,20 @@ class VoiceBillingSettingsNotifier extends StateNotifier<VoiceBillingSettings> {
     _load();
   }
 
-  /// 确保已从本地加载完成
   Future<void> ensureLoaded() => _loadCompleter.future;
 
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
+    final mode = VoiceTriggerModeCodec.fromStorage(
+      prefs.getString(AIConstants.keyVoiceTriggerMode),
+    );
     final timeout = _clampTimeout(
       prefs.getInt(AIConstants.keyVoiceSilenceTimeoutMs) ??
           VoiceBillingSettings.defaultSilenceTimeoutMs,
     );
 
     if (!mounted) return;
-    state = VoiceBillingSettings(silenceTimeoutMs: timeout);
+    state = VoiceBillingSettings(triggerMode: mode, silenceTimeoutMs: timeout);
     if (!_loadCompleter.isCompleted) {
       _loadCompleter.complete();
     }
@@ -65,6 +103,15 @@ class VoiceBillingSettingsNotifier extends StateNotifier<VoiceBillingSettings> {
         VoiceBillingSettings.maxSilenceTimeoutMs,
       );
 
+  /// 设置触发方式
+  Future<void> setTriggerMode(VoiceTriggerMode mode) async {
+    state = state.copyWith(triggerMode: mode);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+        AIConstants.keyVoiceTriggerMode, mode.storageValue);
+    _notifyConfigChanged();
+  }
+
   /// 设置静音判定阈值（毫秒），自动夹取到合法区间
   Future<void> setSilenceTimeoutMs(int value) async {
     final clamped = _clampTimeout(value);
@@ -74,10 +121,8 @@ class VoiceBillingSettingsNotifier extends StateNotifier<VoiceBillingSettings> {
     _notifyConfigChanged();
   }
 
-  /// 重新从本地加载（多设备同步落地后由外部 invalidate 触发重建即可）
   Future<void> reload() => _load();
 
-  /// 触发 AI 配置变更回调，把语音设置一并推到 server 同步到其它设备
   void _notifyConfigChanged() {
     try {
       AIProviderManager.onConfigChanged?.call();
@@ -87,7 +132,6 @@ class VoiceBillingSettingsNotifier extends StateNotifier<VoiceBillingSettings> {
   }
 }
 
-/// 语音记账设置 Provider
 final voiceBillingSettingsProvider =
     StateNotifierProvider<VoiceBillingSettingsNotifier, VoiceBillingSettings>(
         (ref) {

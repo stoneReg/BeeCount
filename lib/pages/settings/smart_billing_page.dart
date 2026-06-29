@@ -124,6 +124,86 @@ class SmartBillingPage extends ConsumerWidget {
     );
   }
 
+  /// 语音记账设置区：触发方式 + 自动检测下的静音时长滑块
+  Widget _buildVoiceBillingSection(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final settings = ref.watch(voiceBillingSettingsProvider);
+    final isAuto = settings.triggerMode == VoiceTriggerMode.auto;
+
+    return SectionCard(
+      margin: EdgeInsets.zero,
+      child: Column(
+        children: [
+          AppListTile(
+            leading: Icons.mic_none_outlined,
+            title: l10n.smartBillingVoiceTrigger,
+            subtitle: isAuto
+                ? l10n.voiceTriggerModeAuto
+                : l10n.voiceTriggerModeHold,
+            onTap: () => _showVoiceTriggerDialog(context, ref, settings.triggerMode),
+          ),
+          if (isAuto) ...[
+            BeeTokens.cardDivider(context),
+            const _VoiceSilenceTimeoutSlider(),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// 触发方式选择弹窗
+  void _showVoiceTriggerDialog(
+    BuildContext context,
+    WidgetRef ref,
+    VoiceTriggerMode current,
+  ) {
+    final l10n = AppLocalizations.of(context);
+    final primaryColor = ref.read(primaryColorProvider);
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.smartBillingVoiceTrigger),
+        contentPadding: const EdgeInsets.symmetric(vertical: 8),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (final mode in VoiceTriggerMode.values)
+              RadioListTile<VoiceTriggerMode>(
+                value: mode,
+                groupValue: current,
+                activeColor: primaryColor,
+                title: Text(
+                  mode == VoiceTriggerMode.auto
+                      ? l10n.voiceTriggerModeAuto
+                      : l10n.voiceTriggerModeHold,
+                  style: const TextStyle(fontSize: 14),
+                ),
+                subtitle: Text(
+                  mode == VoiceTriggerMode.auto
+                      ? l10n.voiceTriggerModeAutoDesc
+                      : l10n.voiceTriggerModeHoldDesc,
+                  style: const TextStyle(fontSize: 12),
+                ),
+                onChanged: (value) async {
+                  if (value == null) return;
+                  Navigator.pop(dialogContext);
+                  await ref
+                      .read(voiceBillingSettingsProvider.notifier)
+                      .setTriggerMode(value);
+                },
+              ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(l10n.commonCancel),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
@@ -320,8 +400,8 @@ class SmartBillingPage extends ConsumerWidget {
 
                 const SizedBox(height: 16),
 
-                // 语音记账：自动检测静音判定时长
-                const _VoiceSilenceTimeoutSection(),
+                // 语音记账设置（触发方式 + 静音灵敏度）
+                _buildVoiceBillingSection(context, ref),
               ],
             ),
           ),
@@ -332,17 +412,16 @@ class SmartBillingPage extends ConsumerWidget {
 }
 
 /// 静音判定时长滑块：拖动时仅更新本地预览，松手后持久化并触发云同步
-class _VoiceSilenceTimeoutSection extends ConsumerStatefulWidget {
-  const _VoiceSilenceTimeoutSection();
+class _VoiceSilenceTimeoutSlider extends ConsumerStatefulWidget {
+  const _VoiceSilenceTimeoutSlider();
 
   @override
-  ConsumerState<_VoiceSilenceTimeoutSection> createState() =>
-      _VoiceSilenceTimeoutSectionState();
+  ConsumerState<_VoiceSilenceTimeoutSlider> createState() =>
+      _VoiceSilenceTimeoutSliderState();
 }
 
-class _VoiceSilenceTimeoutSectionState
-    extends ConsumerState<_VoiceSilenceTimeoutSection> {
-  /// 拖动中的临时值；null 表示使用 provider 中的已保存值
+class _VoiceSilenceTimeoutSliderState
+    extends ConsumerState<_VoiceSilenceTimeoutSlider> {
   int? _dragValueMs;
 
   @override
@@ -352,58 +431,55 @@ class _VoiceSilenceTimeoutSectionState
     final displayMs = _dragValueMs ?? settings.silenceTimeoutMs;
     final seconds = (displayMs / 1000).toStringAsFixed(1);
 
-    return SectionCard(
-      margin: EdgeInsets.zero,
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-            child: Row(
-              children: [
-                Icon(Icons.timer_outlined,
-                    size: 20, color: ref.watch(primaryColorProvider)),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(l10n.smartBillingVoiceSilenceTimeout,
-                          style: const TextStyle(fontSize: 15)),
-                      Text(
-                        l10n.smartBillingVoiceSilenceTimeoutValue(seconds),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: BeeTokens.textTertiary(context),
-                        ),
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          child: Row(
+            children: [
+              Icon(Icons.timer_outlined,
+                  size: 20, color: ref.watch(primaryColorProvider)),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(l10n.smartBillingVoiceSilenceTimeout,
+                        style: const TextStyle(fontSize: 15)),
+                    Text(
+                      l10n.smartBillingVoiceSilenceTimeoutValue(seconds),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: BeeTokens.textTertiary(context),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-          Slider.adaptive(
-            value: displayMs.toDouble(),
-            min: VoiceBillingSettings.minSilenceTimeoutMs.toDouble(),
-            max: VoiceBillingSettings.maxSilenceTimeoutMs.toDouble(),
-            divisions: (VoiceBillingSettings.maxSilenceTimeoutMs -
-                    VoiceBillingSettings.minSilenceTimeoutMs) ~/
-                100,
-            activeColor: ref.watch(primaryColorProvider),
-            label: '${seconds}s',
-            onChanged: (value) {
-              setState(() => _dragValueMs = value.round());
-            },
-            onChangeEnd: (value) async {
-              setState(() => _dragValueMs = null);
-              await ref
-                  .read(voiceBillingSettingsProvider.notifier)
-                  .setSilenceTimeoutMs(value.round());
-            },
-          ),
-          const SizedBox(height: 4),
-        ],
-      ),
+        ),
+        Slider.adaptive(
+          value: displayMs.toDouble(),
+          min: VoiceBillingSettings.minSilenceTimeoutMs.toDouble(),
+          max: VoiceBillingSettings.maxSilenceTimeoutMs.toDouble(),
+          divisions: (VoiceBillingSettings.maxSilenceTimeoutMs -
+                  VoiceBillingSettings.minSilenceTimeoutMs) ~/
+              100,
+          activeColor: ref.watch(primaryColorProvider),
+          label: '${seconds}s',
+          onChanged: (value) {
+            setState(() => _dragValueMs = value.round());
+          },
+          onChangeEnd: (value) async {
+            setState(() => _dragValueMs = null);
+            await ref
+                .read(voiceBillingSettingsProvider.notifier)
+                .setSilenceTimeoutMs(value.round());
+          },
+        ),
+        const SizedBox(height: 4),
+      ],
     );
   }
 }

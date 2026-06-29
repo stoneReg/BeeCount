@@ -84,6 +84,14 @@
     }
   },
   "voiceRecordingNoSpeech": "No speech detected",
+  "voiceRecordingHoldToTalk": "Hold to talk",
+  "voiceRecordingReleaseToFinish": "Release to finish",
+  "voiceRecordingTooShort": "Recording too short",
+  "smartBillingVoiceTrigger": "Voice trigger mode",
+  "voiceTriggerModeAuto": "Auto-detect pause",
+  "voiceTriggerModeAutoDesc": "Stops automatically after a pause; best for short entries",
+  "voiceTriggerModeHold": "Hold to talk",
+  "voiceTriggerModeHoldDesc": "Hold to record, release to stop; best for longer input",
   "smartBillingVoiceSilenceTimeout": "Pause to finish",
   "smartBillingVoiceSilenceTimeoutValue": "Auto-finish after a {seconds}s pause",
   "@smartBillingVoiceSilenceTimeoutValue": {
