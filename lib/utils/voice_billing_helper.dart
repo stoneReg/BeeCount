@@ -113,9 +113,13 @@ class VoiceBillingHelper {
       // 2. 创建录音器
       final recorder = AudioRecorder();
 
-      // 3. 准备录音文件路径（WAV，兼容传统 STT /audio/transcriptions）
+      // 3. 按语音识别模式选择录音格式：传统 STT 用 WAV，多模态用 m4a 减小体积
+      final useM4a =
+          speechProvider.audioMode == AIAudioMode.multimodalChat;
+      final ext = useM4a ? 'm4a' : 'wav';
       final tempDir = await getTemporaryDirectory();
-      final audioPath = '${tempDir.path}/voice_${DateTime.now().millisecondsSinceEpoch}.wav';
+      final audioPath =
+          '${tempDir.path}/voice_${DateTime.now().millisecondsSinceEpoch}.$ext';
 
       // 4. 显示录音对话框（按用户配置的触发方式：自动检测 / 按住说话）
       if (!context.mounted) return;
@@ -128,6 +132,8 @@ class VoiceBillingHelper {
           recorder: recorder,
           triggerMode: settings.triggerMode,
           silenceTimeoutMs: settings.silenceTimeoutMs,
+          audioEncoder:
+              useM4a ? AudioEncoder.aacLc : AudioEncoder.wav,
         ),
       );
     } catch (e) {
@@ -148,11 +154,15 @@ class _VoiceRecordingDialog extends ConsumerStatefulWidget {
   /// 自动检测模式下的静音判定阈值（毫秒）
   final int silenceTimeoutMs;
 
+  /// 录音编码：传统 STT 为 wav，多模态为 m4a(AAC-LC)
+  final AudioEncoder audioEncoder;
+
   const _VoiceRecordingDialog({
     required this.audioPath,
     required this.recorder,
     required this.triggerMode,
     required this.silenceTimeoutMs,
+    required this.audioEncoder,
   });
 
   @override
@@ -224,9 +234,7 @@ class _VoiceRecordingDialogState extends ConsumerState<_VoiceRecordingDialog> {
     final l10n = AppLocalizations.of(context);
     try {
       await widget.recorder.start(
-        const RecordConfig(
-          encoder: AudioEncoder.wav,
-        ),
+        RecordConfig(encoder: widget.audioEncoder),
         path: widget.audioPath,
       );
 

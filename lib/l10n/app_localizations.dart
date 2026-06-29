@@ -11190,6 +11190,16 @@ abstract class AppLocalizations {
   /// **'For voice billing'**
   String get aiCapabilitySpeechToTextDesc;
 
+  String get aiAudioModeTitle;
+
+  String get aiAudioModeTranscription;
+
+  String get aiAudioModeTranscriptionDesc;
+
+  String get aiAudioModeMultimodal;
+
+  String get aiAudioModeMultimodalDesc;
+
   /// No description provided for @aiProviderTestRun.
   ///
   /// In en, this message translates to:

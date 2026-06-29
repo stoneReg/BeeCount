@@ -1,3 +1,35 @@
+/// 语音识别模式
+enum AIAudioMode {
+  /// 传统转写：调 /audio/transcriptions（Whisper 风格）转文字，再做文本提取。成本低。
+  transcription,
+
+  /// 多模态理解：把音频经 chat/completions 的 input_audio 直接交给可推理模型，
+  /// 一步直出账单。对不标准发音更鲁棒，成本更高。
+  multimodalChat,
+}
+
+/// 语音模式与字符串互转（持久化/同步用）
+extension AIAudioModeCodec on AIAudioMode {
+  String get storageValue {
+    switch (this) {
+      case AIAudioMode.transcription:
+        return 'transcription';
+      case AIAudioMode.multimodalChat:
+        return 'multimodal_chat';
+    }
+  }
+
+  static AIAudioMode fromStorage(String? value) {
+    switch (value) {
+      case 'multimodal_chat':
+        return AIAudioMode.multimodalChat;
+      case 'transcription':
+      default:
+        return AIAudioMode.transcription;
+    }
+  }
+}
+
 /// AI 服务商配置
 ///
 /// 存储单个服务商的完整配置信息
@@ -26,6 +58,9 @@ class AIServiceProviderConfig {
   /// 语音模型
   final String audioModel;
 
+  /// 语音识别模式（传统转写 / 多模态理解），默认传统转写。
+  final AIAudioMode audioMode;
+
   /// 创建时间
   final DateTime createdAt;
 
@@ -38,6 +73,7 @@ class AIServiceProviderConfig {
     this.textModel = '',
     this.visionModel = '',
     this.audioModel = '',
+    this.audioMode = AIAudioMode.transcription,
     required this.createdAt,
   });
 
@@ -75,6 +111,7 @@ class AIServiceProviderConfig {
     String? textModel,
     String? visionModel,
     String? audioModel,
+    AIAudioMode? audioMode,
     DateTime? createdAt,
   }) {
     return AIServiceProviderConfig(
@@ -86,6 +123,7 @@ class AIServiceProviderConfig {
       textModel: textModel ?? this.textModel,
       visionModel: visionModel ?? this.visionModel,
       audioModel: audioModel ?? this.audioModel,
+      audioMode: audioMode ?? this.audioMode,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -101,6 +139,7 @@ class AIServiceProviderConfig {
       textModel: json['textModel'] as String? ?? '',
       visionModel: json['visionModel'] as String? ?? '',
       audioModel: json['audioModel'] as String? ?? '',
+      audioMode: AIAudioModeCodec.fromStorage(json['audioMode'] as String?),
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'] as String)
           : DateTime.now(),
@@ -118,6 +157,7 @@ class AIServiceProviderConfig {
       'textModel': textModel,
       'visionModel': visionModel,
       'audioModel': audioModel,
+      'audioMode': audioMode.storageValue,
       'createdAt': createdAt.toIso8601String(),
     };
   }

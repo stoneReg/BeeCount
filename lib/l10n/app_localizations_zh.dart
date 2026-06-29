@@ -5856,6 +5856,23 @@ class AppLocalizationsZh extends AppLocalizations {
   String get aiCapabilitySpeechToTextDesc => '用于语音记账';
 
   @override
+  @override
+  String get aiAudioModeTitle => '语音识别模式';
+
+  @override
+  String get aiAudioModeTranscription => '传统转写（STT）';
+
+  @override
+  String get aiAudioModeTranscriptionDesc => '先转文字再提取账单，成本低、速度快';
+
+  @override
+  String get aiAudioModeMultimodal => '多模态理解';
+
+  @override
+  String get aiAudioModeMultimodalDesc =>
+      '音频直接交给大模型推理并直出账单，对口音更鲁棒，成本更高（需模型支持音频输入）';
+
+  @override
   String get aiProviderTestRun => '点击测试';
 
   @override
@@ -12744,6 +12761,23 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get aiCapabilitySpeechToTextDesc => '用於語音記帳';
+
+  @override
+  @override
+  String get aiAudioModeTitle => '語音辨識模式';
+
+  @override
+  String get aiAudioModeTranscription => '傳統轉寫（STT）';
+
+  @override
+  String get aiAudioModeTranscriptionDesc => '先轉文字再擷取帳單，成本低、速度快';
+
+  @override
+  String get aiAudioModeMultimodal => '多模態理解';
+
+  @override
+  String get aiAudioModeMultimodalDesc =>
+      '音訊直接交給大模型推理並直出帳單，對口音更穩健，成本較高（需模型支援音訊輸入）';
 
   @override
   String get aiProviderTestRun => '點擊測試';
