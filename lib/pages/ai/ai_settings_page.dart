@@ -254,7 +254,92 @@ class _AISettingsPageState extends ConsumerState<AISettingsPage> {
           providers: providers,
           capabilityType: AICapabilityType.speech,
         ),
+        BeeTokens.cardDivider(context),
+        _buildAudioModeTile(binding, providers),
       ],
+    );
+  }
+
+  /// 语音识别模式选择（传统转写 / 多模态理解），作用于当前语音绑定的服务商。
+  Widget _buildAudioModeTile(
+    AICapabilityBinding binding,
+    List<AIServiceProviderConfig> providers,
+  ) {
+    final l10n = AppLocalizations.of(context);
+    final primaryColor = ref.watch(primaryColorProvider);
+    final speechProvider = providers.firstWhere(
+      (p) => p.id == binding.speechProviderId,
+      orElse: () => AIServiceProviderConfig.zhipuDefault,
+    );
+    final isMultimodal = speechProvider.audioMode == AIAudioMode.multimodalChat;
+
+    return ListTile(
+      dense: true,
+      leading: Icon(Icons.graphic_eq, size: 22, color: primaryColor),
+      title: Text(l10n.aiAudioModeTitle, style: const TextStyle(fontSize: 14)),
+      subtitle: Text(
+        isMultimodal
+            ? l10n.aiAudioModeMultimodal
+            : l10n.aiAudioModeTranscription,
+        style: const TextStyle(fontSize: 12),
+      ),
+      trailing: const Icon(Icons.chevron_right, size: 18),
+      onTap: () => _showAudioModeDialog(speechProvider),
+    );
+  }
+
+  void _showAudioModeDialog(AIServiceProviderConfig speechProvider) {
+    final l10n = AppLocalizations.of(context);
+    final primaryColor = ref.read(primaryColorProvider);
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.aiAudioModeTitle),
+        contentPadding: const EdgeInsets.symmetric(vertical: 8),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (final mode in AIAudioMode.values)
+              RadioListTile<AIAudioMode>(
+                value: mode,
+                groupValue: speechProvider.audioMode,
+                activeColor: primaryColor,
+                title: Text(
+                  mode == AIAudioMode.multimodalChat
+                      ? l10n.aiAudioModeMultimodal
+                      : l10n.aiAudioModeTranscription,
+                  style: const TextStyle(fontSize: 14),
+                ),
+                subtitle: Text(
+                  mode == AIAudioMode.multimodalChat
+                      ? l10n.aiAudioModeMultimodalDesc
+                      : l10n.aiAudioModeTranscriptionDesc,
+                  style: const TextStyle(fontSize: 12),
+                ),
+                onChanged: (value) async {
+                  if (value == null) return;
+                  Navigator.pop(dialogContext);
+                  await AIProviderManager.updateProvider(
+                    speechProvider.copyWith(audioMode: value),
+                  );
+                  ref
+                      .read(aiProviderListForCapabilityRefreshProvider.notifier)
+                      .state++;
+                  if (mounted) {
+                    showToast(context, l10n.commonSaved);
+                  }
+                },
+              ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(l10n.commonCancel),
+          ),
+        ],
+      ),
     );
   }
 

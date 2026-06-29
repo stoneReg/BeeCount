@@ -19,6 +19,9 @@ void main() {
       final snapshot = await AIProviderManager.snapshotForSync();
       expect(snapshot['voice_trigger_mode'], 'hold_to_talk');
       expect(snapshot['voice_silence_timeout_ms'], 1800);
+      final providers = snapshot['providers'] as List;
+      expect(providers, isNotEmpty);
+      expect((providers.first as Map)['audioMode'], 'transcription');
     });
 
     test('applyFromServer 落地语音设置', () async {
