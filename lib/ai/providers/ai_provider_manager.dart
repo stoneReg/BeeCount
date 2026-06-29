@@ -261,6 +261,8 @@ class AIProviderManager {
       'use_vision': prefs.getBool('ai_use_vision') ?? false,
       'voice_silence_timeout_ms':
           prefs.getInt(AIConstants.keyVoiceSilenceTimeoutMs),
+      'voice_trigger_mode':
+          prefs.getString(AIConstants.keyVoiceTriggerMode) ?? '',
     };
   }
 
@@ -308,7 +310,13 @@ class AIProviderManager {
       await prefs.setBool('ai_use_vision', useVision);
     }
 
-    // 静音阈值（仅当与本地不同才写，避免触发同步回环）
+    // 语音触发方式 / 静音阈值（仅当与本地不同才写，避免触发同步回环）
+    final voiceTriggerMode = config['voice_trigger_mode'] as String?;
+    if (voiceTriggerMode != null &&
+        voiceTriggerMode.isNotEmpty &&
+        prefs.getString(AIConstants.keyVoiceTriggerMode) != voiceTriggerMode) {
+      await prefs.setString(AIConstants.keyVoiceTriggerMode, voiceTriggerMode);
+    }
     final voiceSilenceTimeout =
         (config['voice_silence_timeout_ms'] as num?)?.toInt();
     if (voiceSilenceTimeout != null &&

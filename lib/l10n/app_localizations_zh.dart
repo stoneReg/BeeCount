@@ -155,6 +155,30 @@ class AppLocalizationsZh extends AppLocalizations {
   String get voiceRecordingNoSpeech => '未检测到语音输入';
 
   @override
+  String get voiceRecordingTooShort => '录音时间过短';
+
+  @override
+  String get voiceRecordingHoldToTalk => '按住 说话';
+
+  @override
+  String get voiceRecordingReleaseToFinish => '松手结束录音';
+
+  @override
+  String get smartBillingVoiceTrigger => '语音触发方式';
+
+  @override
+  String get voiceTriggerModeAuto => '自动检测停顿';
+
+  @override
+  String get voiceTriggerModeAutoDesc => '录音后自动判断说完，适合短句快速记账';
+
+  @override
+  String get voiceTriggerModeHold => '按住说话';
+
+  @override
+  String get voiceTriggerModeHoldDesc => '长按录音、松开结束，适合一次说较多内容';
+
+  @override
   String get smartBillingVoiceSilenceTimeout => '停顿结束时长';
 
   @override
@@ -7007,6 +7031,30 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get voiceRecordingNoSpeech => '未檢測到語音輸入';
+
+  @override
+  String get voiceRecordingTooShort => '錄音時間過短';
+
+  @override
+  String get voiceRecordingHoldToTalk => '按住 說話';
+
+  @override
+  String get voiceRecordingReleaseToFinish => '鬆手結束錄音';
+
+  @override
+  String get smartBillingVoiceTrigger => '語音觸發方式';
+
+  @override
+  String get voiceTriggerModeAuto => '自動偵測停頓';
+
+  @override
+  String get voiceTriggerModeAutoDesc => '錄音後自動判斷說完，適合短句快速記帳';
+
+  @override
+  String get voiceTriggerModeHold => '按住說話';
+
+  @override
+  String get voiceTriggerModeHoldDesc => '長按錄音、鬆開結束，適合一次說較多內容';
 
   @override
   String get smartBillingVoiceSilenceTimeout => '停頓結束時長';
