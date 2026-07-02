@@ -842,20 +842,29 @@ jobs:
 
       - name: Generate release notes
         id: notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="${{ steps.meta.outputs.tag_name }}"
           # 获取上一个 tag（不含当前 tag）
           PREV_TAG=$(git tag --list --sort=-version:refname | grep -v "^${TAG}$" | head -n1)
           echo "Current tag: $TAG"
           echo "Previous tag: $PREV_TAG"
-          # 生成 commit 列表（排除 merge commit）
+          # 生成 commit 列表（排除 merge commit），带提交人：
+          # 用 gh api 反查 commit 对应的 GitHub 登录名生成可点击的 @mention，
+          # 查不到（未关联邮箱/API 失败）时回退为 git 作者名。
           if [ -n "$PREV_TAG" ]; then
             echo "Generating commit log from $PREV_TAG to HEAD"
-            COMMITS=$(git log --no-merges --pretty=format:"- %s ([%h](https://github.com/${GITHUB_REPOSITORY}/commit/%H))" "$PREV_TAG"..HEAD)
+            RANGE="$PREV_TAG..HEAD"
           else
             echo "No previous tag found, showing all commits"
-            COMMITS=$(git log --no-merges --pretty=format:"- %s ([%h](https://github.com/${GITHUB_REPOSITORY}/commit/%H))")
+            RANGE=""
           fi
+          COMMITS=$(git log --no-merges --pretty=tformat:"%H%x09%h%x09%an%x09%s" $RANGE | while IFS=$'\t' read -r full short name subj; do
+            login=$(gh api "repos/${GITHUB_REPOSITORY}/commits/${full}" --jq '.author.login // empty' 2>/dev/null || true)
+            if [ -n "$login" ]; then author="[@${login}](https://github.com/${login})"; else author="$name"; fi
+            echo "- $subj ([${short}](https://github.com/${GITHUB_REPOSITORY}/commit/${full})) $author"
+          done)
           cat > RELEASE_NOTES.md <<EOF
 
           ## 变更记录
@@ -892,9 +901,9 @@ jobs:
           # 获取 commit 变更列表（与 release notes 相同）
           PREV_TAG=$(git tag --list --sort=-version:refname | grep -v "^${TAG}$" | head -n1)
           if [ -n "$PREV_TAG" ]; then
-            COMMITS=$(git log --no-merges --pretty=format:"- %s" "$PREV_TAG"..HEAD)
+            COMMITS=$(git log --no-merges --pretty=format:"- %s (%an)" "$PREV_TAG"..HEAD)
           else
-            COMMITS=$(git log --no-merges --pretty=format:"- %s")
+            COMMITS=$(git log --no-merges --pretty=format:"- %s (%an)")
           fi
 
           # 转义 Markdown 特殊字符，然后进行 URL 编码
