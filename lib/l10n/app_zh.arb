@@ -84,6 +84,9 @@
   "voiceRecordingHoldToTalk": "按住 说话",
   "voiceRecordingReleaseToFinish": "松手结束录音",
   "voiceRecordingTooShort": "录音时间过短",
+  "voiceRecordingResultLabel": "识别结果：",
+  "voiceRecordingAutoHintSpoken": "说完后停顿即可自动识别",
+  "voiceRecordingAutoHintWaiting": "请开始说话...",
   "smartBillingVoiceTrigger": "语音触发方式",
   "voiceTriggerModeAuto": "自动检测停顿",
   "voiceTriggerModeAutoDesc": "录音后自动判断说完，适合短句快速记账",
@@ -157,10 +160,10 @@
   "@searchBatchModeWithCount": {
     "placeholders": {
       "selected": {
-        "type": "Object"
+        "type": "int"
       },
       "total": {
-        "type": "Object"
+        "type": "int"
       }
     }
   },

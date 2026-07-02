@@ -191,6 +191,10 @@ class _VoiceRecordingDialogState extends ConsumerState<_VoiceRecordingDialog> {
   /// 按住说话：是否正在长按录音
   bool _isHolding = false;
 
+  /// 按住说话：录音是否正在启动中（recorder.start 在途）。
+  /// 用于守卫快速「按-松-按」时对同一 recorder 并发调用 start()。
+  bool _isStarting = false;
+
   /// 本次录音开始时间（用于按住说话的最短时长判定）
   DateTime? _recordStartTime;
 
@@ -243,16 +247,34 @@ class _VoiceRecordingDialogState extends ConsumerState<_VoiceRecordingDialog> {
       }
     } catch (e) {
       if (!mounted) return;
-      setState(() => _status = l10n.voiceRecordingFailed(e.toString()));
+      setState(() {
+        _isHolding = false;
+        _status = l10n.voiceRecordingFailed(e.toString());
+      });
+      // 按住说话分支 UI 不渲染 _status,启动失败时直接 toast 兜底,避免零反馈。
+      if (_isHoldToTalk) {
+        showToast(context, l10n.voiceRecordingFailed(e.toString()));
+      }
     }
   }
 
   void _startTimer() {
     Future.delayed(const Duration(seconds: 1), () {
-      if (_isRecording && mounted) {
-        setState(() => _duration++);
-        _startTimer();
+      if (!_isRecording || !mounted) return;
+      setState(() => _duration++);
+      // 最长录音保护(两模式共用)：静音检测只在自动模式跑,按住说话靠此处兜底,
+      // 防止长按几分钟产出超大 WAV、上传超时。
+      if (_duration >= _kMaxRecordingSec) {
+        if (_hasSpoken || _isHoldToTalk) {
+          _stopAndProcess();
+        } else {
+          final l10n = AppLocalizations.of(context);
+          Navigator.of(context).pop();
+          showToast(context, l10n.voiceRecordingNoSpeech);
+        }
+        return;
       }
+      _startTimer();
     });
   }
 
@@ -312,19 +334,7 @@ class _VoiceRecordingDialogState extends ConsumerState<_VoiceRecordingDialog> {
 
       final now = DateTime.now();
 
-      // 最长录音保护：即便静音检测失效，超过上限也强制结束送识别。
-      final recordStart = _recordStartTime ?? startTime;
-      if (now.difference(recordStart).inSeconds >= _kMaxRecordingSec) {
-        timer.cancel();
-        if (_hasSpoken) {
-          _stopAndProcess();
-        } else if (mounted) {
-          final l10n = AppLocalizations.of(context);
-          Navigator.of(context).pop();
-          showToast(context, l10n.voiceRecordingNoSpeech);
-        }
-        return;
-      }
+      // 注：最长录音上限已统一挪到 _startTimer(两模式共用),此处只管静音判定。
 
       if (!_hasSpoken) {
         if (now.difference(startTime).inSeconds >= _kStartSilenceTimeoutSec) {
@@ -348,12 +358,25 @@ class _VoiceRecordingDialogState extends ConsumerState<_VoiceRecordingDialog> {
 
   /// 按住说话：长按开始录音
   Future<void> _onHoldStart() async {
-    if (_isRecording || _isProcessing) return;
+    // 守卫覆盖「启动中」窗口：快速 按-松-按 时,第二次按下若仅看 _isRecording/
+    // _isProcessing 均为 false 会放行,对同一 recorder 并发调 start()。
+    if (_isRecording || _isProcessing || _isStarting) return;
+    _isStarting = true;
     setState(() => _isHolding = true);
-    await _startRecording();
-    // 竞态修复：启动录音期间用户已松手，丢弃 orphan 录音
-    if (!_isHolding) {
+    try {
+      await _startRecording();
+    } finally {
+      _isStarting = false;
+    }
+    // 竞态修复：录音已启动但启动期间用户已松手，丢弃 orphan 录音。
+    // 限定 _isRecording，避免启动失败(catch 已 toast)时再叠一条"过短"提示。
+    if (!_isHolding && _isRecording) {
       await _discardRecording();
+      // 与正常 <500ms 路径体验一致：丢弃时提示录音过短。
+      if (mounted) {
+        final l10n = AppLocalizations.of(context);
+        showToast(context, l10n.voiceRecordingTooShort);
+      }
     }
   }
 
@@ -381,11 +404,19 @@ class _VoiceRecordingDialogState extends ConsumerState<_VoiceRecordingDialog> {
   Future<void> _discardRecording() async {
     _silenceTimer?.cancel();
     _amplitudeTimer?.cancel();
-    setState(() {
+    // mounted 保护：按下→松手→取消三步都发生在 recorder.start() 在途窗口内时,
+    // State 可能已 dispose,此处对已卸载的 State 调 setState 会崩溃。
+    if (!mounted) {
       _isRecording = false;
       _hasSpoken = false;
       _duration = 0;
-    });
+    } else {
+      setState(() {
+        _isRecording = false;
+        _hasSpoken = false;
+        _duration = 0;
+      });
+    }
     try {
       await widget.recorder.stop();
     } catch (_) {}
@@ -498,6 +529,7 @@ class _VoiceRecordingDialogState extends ConsumerState<_VoiceRecordingDialog> {
 
   /// 识别结果展示块（处理中）。
   Widget _buildRecognizedTextBlock() {
+    final l10n = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -510,7 +542,7 @@ class _VoiceRecordingDialogState extends ConsumerState<_VoiceRecordingDialog> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            '识别结果：',
+            l10n.voiceRecordingResultLabel,
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.bold,
@@ -536,17 +568,21 @@ class _VoiceRecordingDialogState extends ConsumerState<_VoiceRecordingDialog> {
       _buildAmplitudeCircle(),
       const SizedBox(height: 16),
       Text(
-        _hasSpoken ? '说完后停顿即可自动识别' : '请开始说话...',
+        _hasSpoken
+            ? l10n.voiceRecordingAutoHintSpoken
+            : l10n.voiceRecordingAutoHintWaiting,
         style: TextStyle(
           fontSize: 14,
-          color: _hasSpoken ? ref.watch(primaryColorProvider) : Colors.grey,
+          color: _hasSpoken
+              ? ref.watch(primaryColorProvider)
+              : BeeTokens.textSecondary(context),
           fontWeight: _hasSpoken ? FontWeight.bold : FontWeight.normal,
         ),
       ),
       const SizedBox(height: 8),
       Text(
         l10n.voiceRecordingDuration(_duration),
-        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+        style: TextStyle(fontSize: 12, color: BeeTokens.textSecondary(context)),
       ),
     ];
   }
@@ -560,7 +596,7 @@ class _VoiceRecordingDialogState extends ConsumerState<_VoiceRecordingDialog> {
         const SizedBox(height: 8),
         Text(
           l10n.voiceRecordingDuration(_duration),
-          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+          style: TextStyle(fontSize: 12, color: BeeTokens.textSecondary(context)),
         ),
         const SizedBox(height: 16),
       ] else
@@ -582,7 +618,7 @@ class _VoiceRecordingDialogState extends ConsumerState<_VoiceRecordingDialog> {
           child: Icon(
             Icons.mic,
             size: 40,
-            color: _isHolding ? Colors.white : primaryColor,
+            color: _isHolding ? BeeTokens.textOnPrimary(context) : primaryColor,
           ),
         ),
       ),
@@ -593,7 +629,7 @@ class _VoiceRecordingDialogState extends ConsumerState<_VoiceRecordingDialog> {
             : l10n.voiceRecordingHoldToTalk,
         style: TextStyle(
           fontSize: 14,
-          color: _isRecording ? primaryColor : Colors.grey,
+          color: _isRecording ? primaryColor : BeeTokens.textSecondary(context),
           fontWeight: _isRecording ? FontWeight.bold : FontWeight.normal,
         ),
       ),

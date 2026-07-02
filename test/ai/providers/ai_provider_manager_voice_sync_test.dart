@@ -34,6 +34,14 @@ void main() {
       expect(prefs.getInt(AIConstants.keyVoiceSilenceTimeoutMs), 2200);
     });
 
+    test('snapshotForSync 未设置语音 key 时不携带,避免回推覆盖 server', () async {
+      SharedPreferences.setMockInitialValues({});
+
+      final snapshot = await AIProviderManager.snapshotForSync();
+      expect(snapshot.containsKey('voice_trigger_mode'), isFalse);
+      expect(snapshot.containsKey('voice_silence_timeout_ms'), isFalse);
+    });
+
     test('applyFromServer 缺省语音字段时不覆盖本地', () async {
       SharedPreferences.setMockInitialValues({
         AIConstants.keyVoiceTriggerMode: 'auto',

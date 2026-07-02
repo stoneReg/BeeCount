@@ -374,6 +374,12 @@ abstract class AppLocalizations {
 
   String get voiceRecordingTooShort;
 
+  String get voiceRecordingResultLabel;
+
+  String get voiceRecordingAutoHintSpoken;
+
+  String get voiceRecordingAutoHintWaiting;
+
   String get voiceRecordingHoldToTalk;
 
   String get voiceRecordingReleaseToFinish;

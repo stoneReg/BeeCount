@@ -91,11 +91,13 @@ class VoiceBillingSettingsNotifier extends StateNotifier<VoiceBillingSettings> {
           VoiceBillingSettings.defaultSilenceTimeoutMs,
     );
 
-    if (!mounted) return;
-    state = VoiceBillingSettings(triggerMode: mode, silenceTimeoutMs: timeout);
+    // 先完成 Completer,再做 mounted 检查：否则 notifier 若在加载完成前被 dispose,
+    // 早退会跳过 complete,导致 ensureLoaded() 的 future 永不完成、调用方永久挂起。
     if (!_loadCompleter.isCompleted) {
       _loadCompleter.complete();
     }
+    if (!mounted) return;
+    state = VoiceBillingSettings(triggerMode: mode, silenceTimeoutMs: timeout);
   }
 
   static int _clampTimeout(int value) => value.clamp(

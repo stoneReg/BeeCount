@@ -251,7 +251,7 @@ class AIProviderManager {
     final prefs = await SharedPreferences.getInstance();
     final providers = await getProviders();
     final binding = await getCapabilityBinding();
-    return {
+    final snapshot = <String, dynamic>{
       'providers': providers.map((p) => p.toJson()).toList(),
       'binding': binding.toJson(),
       'custom_prompt': prefs.getString('ai_custom_prompt') ?? '',
@@ -259,11 +259,18 @@ class AIProviderManager {
       'bill_extraction_enabled':
           prefs.getBool('ai_bill_extraction_enabled') ?? false,
       'use_vision': prefs.getBool('ai_use_vision') ?? false,
-      'voice_silence_timeout_ms':
-          prefs.getInt(AIConstants.keyVoiceSilenceTimeoutMs),
-      'voice_trigger_mode':
-          prefs.getString(AIConstants.keyVoiceTriggerMode) ?? '',
     };
+    // 语音设置仅在本机曾显式配置时才携带。server 端 ai_config 是整包替换,
+    // 若未设置端携带空值回推,会清空他机在 server 上配好的语音设置。
+    if (prefs.containsKey(AIConstants.keyVoiceTriggerMode)) {
+      snapshot['voice_trigger_mode'] =
+          prefs.getString(AIConstants.keyVoiceTriggerMode);
+    }
+    if (prefs.containsKey(AIConstants.keyVoiceSilenceTimeoutMs)) {
+      snapshot['voice_silence_timeout_ms'] =
+          prefs.getInt(AIConstants.keyVoiceSilenceTimeoutMs);
+    }
+    return snapshot;
   }
 
   /// 把 server /profile/me 返回的 ai_config dict 落到本地 SharedPreferences。

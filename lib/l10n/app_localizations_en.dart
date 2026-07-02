@@ -158,6 +158,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get voiceRecordingTooShort => 'Recording too short';
 
   @override
+  String get voiceRecordingResultLabel => 'Recognition result:';
+
+  @override
+  String get voiceRecordingAutoHintSpoken => 'Pause when done to auto-recognize';
+
+  @override
+  String get voiceRecordingAutoHintWaiting => 'Please start speaking...';
+
+  @override
   String get voiceRecordingHoldToTalk => 'Hold to talk';
 
   @override

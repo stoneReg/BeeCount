@@ -158,6 +158,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get voiceRecordingTooShort => '录音时间过短';
 
   @override
+  String get voiceRecordingResultLabel => '识别结果：';
+
+  @override
+  String get voiceRecordingAutoHintSpoken => '说完后停顿即可自动识别';
+
+  @override
+  String get voiceRecordingAutoHintWaiting => '请开始说话...';
+
+  @override
   String get voiceRecordingHoldToTalk => '按住 说话';
 
   @override
@@ -7034,6 +7043,15 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get voiceRecordingTooShort => '錄音時間過短';
+
+  @override
+  String get voiceRecordingResultLabel => '識別結果：';
+
+  @override
+  String get voiceRecordingAutoHintSpoken => '說完後停頓即可自動識別';
+
+  @override
+  String get voiceRecordingAutoHintWaiting => '請開始說話...';
 
   @override
   String get voiceRecordingHoldToTalk => '按住 說話';
