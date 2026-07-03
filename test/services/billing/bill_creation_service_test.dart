@@ -274,10 +274,10 @@ void main() {
         name: '支付宝',
         currency: 'CNY',
       );
-      // 另一币种账户不参与匹配
+      // 另一币种账户同名已不允许(全局唯一),用不同名验证「仅同账本币种参与匹配」
       await repo.createAccount(
         ledgerId: ledgerId,
-        name: '支付宝',
+        name: '美元现金',
         currency: 'USD',
       );
       final txId = await service.createFromBill(

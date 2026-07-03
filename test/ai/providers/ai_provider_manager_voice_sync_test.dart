@@ -19,6 +19,9 @@ void main() {
       final snapshot = await AIProviderManager.snapshotForSync();
       expect(snapshot['voice_trigger_mode'], 'hold_to_talk');
       expect(snapshot['voice_silence_timeout_ms'], 1800);
+      final providers = snapshot['providers'] as List;
+      expect(providers, isNotEmpty);
+      expect((providers.first as Map)['audioMode'], 'transcription');
     });
 
     test('applyFromServer 落地语音设置', () async {
@@ -53,6 +56,45 @@ void main() {
       final prefs = await SharedPreferences.getInstance();
       expect(prefs.getString(AIConstants.keyVoiceTriggerMode), 'auto');
       expect(prefs.getInt(AIConstants.keyVoiceSilenceTimeoutMs), 1500);
+    });
+
+    test('snapshotForSync 携带 reasoning 字段（仅 containsKey 时）', () async {
+      SharedPreferences.setMockInitialValues({
+        AIConstants.keyAiReasoningLevel: 'medium',
+        AIConstants.keyAiReasoningVendor: 'volcengine',
+      });
+
+      final snapshot = await AIProviderManager.snapshotForSync();
+      expect(snapshot['ai_reasoning_level'], 'medium');
+      expect(snapshot['ai_reasoning_vendor'], 'volcengine');
+    });
+
+    test('snapshotForSync 未设置 reasoning 时不携带', () async {
+      SharedPreferences.setMockInitialValues({});
+
+      final snapshot = await AIProviderManager.snapshotForSync();
+      expect(snapshot.containsKey('ai_reasoning_level'), isFalse);
+      expect(snapshot.containsKey('ai_reasoning_vendor'), isFalse);
+    });
+
+    test('applyFromServer 落地 reasoning 且缺省不覆盖本地', () async {
+      SharedPreferences.setMockInitialValues({
+        AIConstants.keyAiReasoningLevel: 'low',
+        AIConstants.keyAiReasoningVendor: 'volcengine',
+      });
+
+      await AIProviderManager.applyFromServer({
+        'ai_reasoning_level': 'high',
+        'ai_reasoning_vendor': 'volcengine',
+      });
+
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString(AIConstants.keyAiReasoningLevel), 'high');
+      expect(prefs.getString(AIConstants.keyAiReasoningVendor), 'volcengine');
+
+      await AIProviderManager.applyFromServer({'strategy': 'cloud_first'});
+      expect(prefs.getString(AIConstants.keyAiReasoningLevel), 'high');
+      expect(prefs.getString(AIConstants.keyAiReasoningVendor), 'volcengine');
     });
   });
 }

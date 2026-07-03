@@ -16,6 +16,7 @@ import '../models/ledger_display_item.dart';
 import '../ai/providers/ai_provider_manager.dart';
 import '../pages/ai/ai_provider_manage_page.dart' show aiProviderListRefreshProvider;
 import 'ai_config_providers.dart';
+import 'ai_reasoning_providers.dart';
 import 'voice_billing_providers.dart';
 import '../services/attachment_service.dart' show attachmentListRefreshProvider;
 import '../services/system/logger_service.dart';
@@ -277,6 +278,9 @@ final syncServiceProvider = Provider<SyncService>((ref) {
                   // 期间设置页会短暂闪回默认值；reload 原地刷新更平滑。
                   ref
                       .read(voiceBillingSettingsProvider.notifier)
+                      .reload();
+                  ref
+                      .read(aiReasoningSettingsProvider.notifier)
                       .reload();
                 } catch (e, st) {
                   logger.warning(

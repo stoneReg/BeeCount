@@ -5856,6 +5856,60 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiCapabilitySpeechToTextDesc => 'For voice billing';
 
   @override
+  String get aiAudioModeTitle => 'Voice recognition mode';
+
+  @override
+  String get aiAudioModeTranscription => 'Transcription (STT)';
+
+  @override
+  String get aiAudioModeTranscriptionDesc => 'Transcribe first, then extract; cheaper and faster';
+
+  @override
+  String get aiAudioModeMultimodal => 'Multimodal understanding';
+
+  @override
+  String get aiAudioModeMultimodalDesc => 'Send audio directly to the model to reason and output bills; more robust to accents, higher cost (requires audio-input support)';
+
+  @override
+  String get aiReasoningTitle => 'Deep reasoning';
+
+  @override
+  String get aiReasoningOff => 'Off';
+
+  @override
+  String get aiReasoningLow => 'Low';
+
+  @override
+  String get aiReasoningMedium => 'Medium';
+
+  @override
+  String get aiReasoningHigh => 'High';
+
+  @override
+  String get aiReasoningVendorTitle => 'Reasoning vendor protocol';
+
+  @override
+  String get aiReasoningVendorVolcengine => 'Volcengine / Doubao';
+
+  @override
+  String get aiReasoningVendorZhipu => 'Zhipu GLM';
+
+  @override
+  String get aiReasoningVendorOpenaiCompat => 'OpenAI compatible (generic)';
+
+  @override
+  String get aiReasoningVendorHint => 'Choose the vendor protocol for deep reasoning. Applies to text chat, image understanding, and multimodal voice (chat/completions). Many users route through proxy APIs, so the app cannot infer the vendor from the base URL.';
+
+  @override
+  String get aiReasoningVendorRequired => 'Select a vendor protocol before enabling deep reasoning';
+
+  @override
+  String get aiReasoningPickVendorBelow => 'Select a reasoning vendor protocol below';
+
+  @override
+  String get aiReasoningPickLevelAbove => 'Vendor selected — now choose a reasoning level (Low / Medium / High)';
+
+  @override
   String get aiProviderTestRun => 'Tap to test';
 
   @override

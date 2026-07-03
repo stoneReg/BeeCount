@@ -653,7 +653,7 @@ class _AIProviderEditPageState extends ConsumerState<AIProviderEditPage> {
     );
   }
 
-  /// 获取当前配置
+  /// 获取当前配置（测试用，保留已保存的 audioMode 等未在表单编辑的字段）
   AIServiceProviderConfig _getCurrentConfig() {
     return AIServiceProviderConfig(
       id: widget.provider?.id ?? 'test',
@@ -664,8 +664,19 @@ class _AIProviderEditPageState extends ConsumerState<AIProviderEditPage> {
       textModel: _textModelController.text,
       visionModel: _visionModelController.text,
       audioModel: _audioModelController.text,
+      audioMode: widget.provider?.audioMode ?? AIAudioMode.transcription,
       createdAt: widget.provider?.createdAt ?? DateTime.now(),
     );
+  }
+
+  /// 测试用配置：合并表单草稿与库里最新的 audioMode（识别模式在 AI 设置页改，编辑页可能持有旧快照）
+  Future<AIServiceProviderConfig> _getCurrentConfigForTest() async {
+    final draft = _getCurrentConfig();
+    final id = widget.provider?.id;
+    if (id == null) return draft;
+    final latest = await AIProviderManager.getProvider(id);
+    if (latest == null) return draft;
+    return draft.copyWith(audioMode: latest.audioMode);
   }
 
   /// 测试文本能力
@@ -751,7 +762,7 @@ class _AIProviderEditPageState extends ConsumerState<AIProviderEditPage> {
     });
 
     try {
-      final config = _getCurrentConfig();
+      final config = await _getCurrentConfigForTest();
       final (success, error) = await AIProviderFactory.validateSpeechCapability(config);
 
       if (mounted) {

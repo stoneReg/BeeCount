@@ -10,7 +10,9 @@ import '../../providers/ai_config_providers.dart';
 import '../../l10n/app_localizations.dart';
 import '../../ai/providers/ai_provider_config.dart';
 import '../../ai/providers/ai_provider_manager.dart';
+import '../../ai/providers/ai_reasoning_adapter.dart';
 import '../../ai/privacy/ai_privacy_consent.dart';
+import '../../providers/ai_reasoning_providers.dart';
 import '../../widgets/ai/ai_privacy_consent_dialog.dart';
 import 'ai_prompt_edit_page.dart';
 import 'ai_provider_manage_page.dart';
@@ -25,6 +27,9 @@ class AISettingsPage extends ConsumerStatefulWidget {
 
 class _AISettingsPageState extends ConsumerState<AISettingsPage> {
   bool _advancedExpanded = false;
+
+  /// 档位为关闭时预选的厂商（尚未持久化，用于先选厂商再选档位的流程）
+  AIReasoningVendor _pendingReasoningVendor = AIReasoningVendor.none;
 
   @override
   void initState() {
@@ -42,6 +47,65 @@ class _AISettingsPageState extends ConsumerState<AISettingsPage> {
         await ref.read(aiConfigProvider.notifier).setEnabled(false);
       }
     });
+  }
+
+  /// 当前厂商单选展示值：已开启时用持久化值，关闭时用预选值
+  AIReasoningVendor _effectiveReasoningVendor(AIReasoningSettings reasoning) {
+    if (reasoning.level != AIReasoningLevel.off) {
+      return reasoning.vendor;
+    }
+    return _pendingReasoningVendor;
+  }
+
+  Future<void> _onReasoningLevelChanged(
+    AIReasoningLevel? value,
+    AIReasoningSettings reasoning,
+    AIReasoningSettingsNotifier notifier,
+    AppLocalizations l10n,
+  ) async {
+    if (value == null) return;
+    if (value == AIReasoningLevel.off) {
+      setState(() => _pendingReasoningVendor = AIReasoningVendor.none);
+      await notifier.save(level: AIReasoningLevel.off, vendor: AIReasoningVendor.none);
+      return;
+    }
+    final vendor = _effectiveReasoningVendor(reasoning);
+    if (vendor != AIReasoningVendor.none) {
+      final ok = await notifier.save(level: value, vendor: vendor);
+      if (!ok && mounted) {
+        showToast(context, l10n.aiReasoningVendorRequired);
+      } else if (mounted) {
+        setState(() => _pendingReasoningVendor = AIReasoningVendor.none);
+        showToast(context, l10n.commonSaved);
+      }
+      return;
+    }
+    notifier.previewLevel(value);
+    if (mounted) {
+      showToast(context, l10n.aiReasoningPickVendorBelow);
+    }
+  }
+
+  Future<void> _onReasoningVendorChanged(
+    AIReasoningVendor? value,
+    AIReasoningSettings reasoning,
+    AIReasoningSettingsNotifier notifier,
+    AppLocalizations l10n,
+  ) async {
+    if (value == null) return;
+    if (reasoning.level == AIReasoningLevel.off) {
+      setState(() => _pendingReasoningVendor = value);
+      if (mounted) {
+        showToast(context, l10n.aiReasoningPickLevelAbove);
+      }
+      return;
+    }
+    final ok = await notifier.save(level: reasoning.level, vendor: value);
+    if (!ok && mounted) {
+      showToast(context, l10n.aiReasoningVendorRequired);
+    } else if (mounted) {
+      showToast(context, l10n.commonSaved);
+    }
   }
 
   @override
@@ -254,7 +318,93 @@ class _AISettingsPageState extends ConsumerState<AISettingsPage> {
           providers: providers,
           capabilityType: AICapabilityType.speech,
         ),
+        BeeTokens.cardDivider(context),
+        _buildAudioModeTile(binding, providers),
       ],
+    );
+  }
+
+  /// 语音识别模式选择（传统转写 / 多模态理解），作用于当前语音绑定的服务商。
+  Widget _buildAudioModeTile(
+    AICapabilityBinding binding,
+    List<AIServiceProviderConfig> providers,
+  ) {
+    final l10n = AppLocalizations.of(context);
+    final primaryColor = ref.watch(primaryColorProvider);
+    final speechProvider = providers.firstWhere(
+      (p) => p.id == binding.speechProviderId,
+      orElse: () => AIServiceProviderConfig.zhipuDefault,
+    );
+    final isMultimodal = speechProvider.audioMode == AIAudioMode.multimodalChat;
+
+    return ListTile(
+      dense: true,
+      leading: Icon(Icons.graphic_eq, size: 22, color: primaryColor),
+      title: Text(l10n.aiAudioModeTitle, style: const TextStyle(fontSize: 14)),
+      subtitle: Text(
+        isMultimodal
+            ? l10n.aiAudioModeMultimodal
+            : l10n.aiAudioModeTranscription,
+        style: const TextStyle(fontSize: 12),
+      ),
+      trailing: const Icon(Icons.chevron_right, size: 18),
+      onTap: () => _showAudioModeDialog(speechProvider),
+    );
+  }
+
+  void _showAudioModeDialog(AIServiceProviderConfig speechProvider) {
+    final l10n = AppLocalizations.of(context);
+    final primaryColor = ref.read(primaryColorProvider);
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.aiAudioModeTitle),
+        contentPadding: const EdgeInsets.symmetric(vertical: 8),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (final mode in AIAudioMode.values)
+              RadioListTile<AIAudioMode>(
+                value: mode,
+                groupValue: speechProvider.audioMode,
+                activeColor: primaryColor,
+                title: Text(
+                  mode == AIAudioMode.multimodalChat
+                      ? l10n.aiAudioModeMultimodal
+                      : l10n.aiAudioModeTranscription,
+                  style: const TextStyle(fontSize: 14),
+                ),
+                subtitle: Text(
+                  mode == AIAudioMode.multimodalChat
+                      ? l10n.aiAudioModeMultimodalDesc
+                      : l10n.aiAudioModeTranscriptionDesc,
+                  style: const TextStyle(fontSize: 12),
+                ),
+                onChanged: (value) async {
+                  if (value == null) return;
+                  Navigator.pop(dialogContext);
+                  await AIProviderManager.updateProvider(
+                    speechProvider.copyWith(audioMode: value),
+                  );
+                  ref
+                      .read(aiProviderListForCapabilityRefreshProvider.notifier)
+                      .state++;
+                  ref.read(aiProviderListRefreshProvider.notifier).state++;
+                  if (mounted) {
+                    showToast(context, l10n.commonSaved);
+                  }
+                },
+              ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(l10n.commonCancel),
+          ),
+        ],
+      ),
     );
   }
 
@@ -385,6 +535,8 @@ class _AISettingsPageState extends ConsumerState<AISettingsPage> {
     final l10n = AppLocalizations.of(context);
     final primaryColor = ref.watch(primaryColorProvider);
     final notifier = ref.read(aiConfigProvider.notifier);
+    final reasoning = ref.watch(aiReasoningSettingsProvider);
+    final reasoningNotifier = ref.read(aiReasoningSettingsProvider.notifier);
 
     return SectionCard(
       margin: EdgeInsets.zero,
@@ -499,9 +651,84 @@ class _AISettingsPageState extends ConsumerState<AISettingsPage> {
 
             BeeTokens.cardDivider(context),
 
-            // 历史「本地模型(训练中)」占位 entry 已删除(2026-05-24)。本地 AI 视觉
-            // 未来走 Apple Foundation Models / Gemini Nano(平台原生 SDK,非 tflite),
-            // 详见 .docs/on-device-vlm/README.md。
+            // === 深度思考 ===
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+              child: Row(
+                children: [
+                  Icon(Icons.psychology_outlined,
+                      size: 18, color: BeeTokens.textSecondary(context)),
+                  const SizedBox(width: 8),
+                  Text(
+                    l10n.aiReasoningTitle,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: BeeTokens.textSecondary(context),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            for (final level in AIReasoningLevel.values)
+              RadioListTile<AIReasoningLevel>(
+                value: level,
+                groupValue: reasoning.level,
+                onChanged: (value) => _onReasoningLevelChanged(
+                  value,
+                  reasoning,
+                  reasoningNotifier,
+                  l10n,
+                ),
+                title: Text(_reasoningLevelLabel(l10n, level),
+                    style: const TextStyle(fontSize: 14)),
+                activeColor: primaryColor,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                dense: true,
+              ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+              child: Text(
+                l10n.aiReasoningVendorTitle,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: BeeTokens.textSecondary(context),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+              child: Text(
+                l10n.aiReasoningVendorHint,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: BeeTokens.textTertiary(context),
+                ),
+              ),
+            ),
+            for (final vendor in [
+              AIReasoningVendor.volcengine,
+              AIReasoningVendor.zhipu,
+              AIReasoningVendor.openaiCompat,
+            ])
+              RadioListTile<AIReasoningVendor>(
+                value: vendor,
+                groupValue: _effectiveReasoningVendor(reasoning),
+                onChanged: (value) => _onReasoningVendorChanged(
+                  value,
+                  reasoning,
+                  reasoningNotifier,
+                  l10n,
+                ),
+                title: Text(_reasoningVendorLabel(l10n, vendor),
+                    style: const TextStyle(fontSize: 14)),
+                activeColor: primaryColor,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                dense: true,
+              ),
+
+            BeeTokens.cardDivider(context),
 
             // === 自定义提示词 ===
             ListTile(
@@ -525,5 +752,31 @@ class _AISettingsPageState extends ConsumerState<AISettingsPage> {
         ),
       ),
     );
+  }
+
+  String _reasoningLevelLabel(AppLocalizations l10n, AIReasoningLevel level) {
+    switch (level) {
+      case AIReasoningLevel.off:
+        return l10n.aiReasoningOff;
+      case AIReasoningLevel.low:
+        return l10n.aiReasoningLow;
+      case AIReasoningLevel.medium:
+        return l10n.aiReasoningMedium;
+      case AIReasoningLevel.high:
+        return l10n.aiReasoningHigh;
+    }
+  }
+
+  String _reasoningVendorLabel(AppLocalizations l10n, AIReasoningVendor vendor) {
+    switch (vendor) {
+      case AIReasoningVendor.volcengine:
+        return l10n.aiReasoningVendorVolcengine;
+      case AIReasoningVendor.zhipu:
+        return l10n.aiReasoningVendorZhipu;
+      case AIReasoningVendor.openaiCompat:
+        return l10n.aiReasoningVendorOpenaiCompat;
+      case AIReasoningVendor.none:
+        return '';
+    }
   }
 }

@@ -18,6 +18,12 @@ class AIConstants {
   /// 语音触发方式：auto（自动检测停顿）/ hold_to_talk（按住说话）
   static const String keyVoiceTriggerMode = 'voice_trigger_mode';
 
+  /// 深度思考档位：off / low / medium / high（多设备同步）
+  static const String keyAiReasoningLevel = 'ai_reasoning_level';
+
+  /// 深度思考厂商协议：none / volcengine / zhipu / openai_compat
+  static const String keyAiReasoningVendor = 'ai_reasoning_vendor';
+
   // OpenAI 兼容协议配置
   static const String keyAiServiceProvider = 'ai_service_provider';
   static const String keyCustomBaseUrl = 'ai_custom_base_url';
