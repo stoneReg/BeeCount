@@ -5856,7 +5856,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get aiCapabilitySpeechToTextDesc => '用于语音记账';
 
   @override
-  @override
   String get aiAudioModeTitle => '语音识别模式';
 
   @override
@@ -5869,8 +5868,46 @@ class AppLocalizationsZh extends AppLocalizations {
   String get aiAudioModeMultimodal => '多模态理解';
 
   @override
-  String get aiAudioModeMultimodalDesc =>
-      '音频直接交给大模型推理并直出账单，对口音更鲁棒，成本更高（需模型支持音频输入）';
+  String get aiAudioModeMultimodalDesc => '音频直接交给大模型推理并直出账单，对口音更鲁棒，成本更高（需模型支持音频输入）';
+
+  @override
+  String get aiReasoningTitle => '深度思考';
+
+  @override
+  String get aiReasoningOff => '关闭';
+
+  @override
+  String get aiReasoningLow => '低';
+
+  @override
+  String get aiReasoningMedium => '中';
+
+  @override
+  String get aiReasoningHigh => '高';
+
+  @override
+  String get aiReasoningVendorTitle => '深度思考厂商协议';
+
+  @override
+  String get aiReasoningVendorVolcengine => '火山方舟 / 豆包';
+
+  @override
+  String get aiReasoningVendorZhipu => '智谱 GLM';
+
+  @override
+  String get aiReasoningVendorOpenaiCompat => 'OpenAI 兼容（通用）';
+
+  @override
+  String get aiReasoningVendorHint => '请选择深度思考所适配的厂商协议，作用于文本对话、图片理解与多模态语音的 chat/completions 请求。因许多用户使用中转 API，App 无法通过地址自动识别厂商；正确选择可让深度思考参数与上游实现一致。';
+
+  @override
+  String get aiReasoningVendorRequired => '开启深度思考前请先选择厂商协议';
+
+  @override
+  String get aiReasoningPickVendorBelow => '请在下方选择深度思考厂商协议';
+
+  @override
+  String get aiReasoningPickLevelAbove => '已选择厂商，请继续选择深度思考档位（低/中/高）';
 
   @override
   String get aiProviderTestRun => '点击测试';
@@ -12763,7 +12800,6 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get aiCapabilitySpeechToTextDesc => '用於語音記帳';
 
   @override
-  @override
   String get aiAudioModeTitle => '語音辨識模式';
 
   @override
@@ -12776,8 +12812,46 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get aiAudioModeMultimodal => '多模態理解';
 
   @override
-  String get aiAudioModeMultimodalDesc =>
-      '音訊直接交給大模型推理並直出帳單，對口音更穩健，成本較高（需模型支援音訊輸入）';
+  String get aiAudioModeMultimodalDesc => '音訊直接交給大模型推理並直出帳單，對口音更穩健，成本較高（需模型支援音訊輸入）';
+
+  @override
+  String get aiReasoningTitle => '深度思考';
+
+  @override
+  String get aiReasoningOff => '關閉';
+
+  @override
+  String get aiReasoningLow => '低';
+
+  @override
+  String get aiReasoningMedium => '中';
+
+  @override
+  String get aiReasoningHigh => '高';
+
+  @override
+  String get aiReasoningVendorTitle => '深度思考廠商協議';
+
+  @override
+  String get aiReasoningVendorVolcengine => '火山方舟 / 豆包';
+
+  @override
+  String get aiReasoningVendorZhipu => '智譜 GLM';
+
+  @override
+  String get aiReasoningVendorOpenaiCompat => 'OpenAI 相容（通用）';
+
+  @override
+  String get aiReasoningVendorHint => '請選擇深度思考所適配的廠商協議，作用於文字對話、圖片理解與多模態語音的 chat/completions 請求。因許多使用者使用中轉 API，App 無法透過位址自動識別廠商；正確選擇可讓深度思考參數與上游實作一致。';
+
+  @override
+  String get aiReasoningVendorRequired => '開啟深度思考前請先選擇廠商協議';
+
+  @override
+  String get aiReasoningPickVendorBelow => '請在下方選擇深度思考廠商協議';
+
+  @override
+  String get aiReasoningPickLevelAbove => '已選擇廠商，請繼續選擇深度思考檔位（低/中/高）';
 
   @override
   String get aiProviderTestRun => '點擊測試';

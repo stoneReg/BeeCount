@@ -669,6 +669,16 @@ class _AIProviderEditPageState extends ConsumerState<AIProviderEditPage> {
     );
   }
 
+  /// 测试用配置：合并表单草稿与库里最新的 audioMode（识别模式在 AI 设置页改，编辑页可能持有旧快照）
+  Future<AIServiceProviderConfig> _getCurrentConfigForTest() async {
+    final draft = _getCurrentConfig();
+    final id = widget.provider?.id;
+    if (id == null) return draft;
+    final latest = await AIProviderManager.getProvider(id);
+    if (latest == null) return draft;
+    return draft.copyWith(audioMode: latest.audioMode);
+  }
+
   /// 测试文本能力
   Future<void> _testTextCapability() async {
     final l10n = AppLocalizations.of(context);
@@ -752,7 +762,7 @@ class _AIProviderEditPageState extends ConsumerState<AIProviderEditPage> {
     });
 
     try {
-      final config = _getCurrentConfig();
+      final config = await _getCurrentConfigForTest();
       final (success, error) = await AIProviderFactory.validateSpeechCapability(config);
 
       if (mounted) {

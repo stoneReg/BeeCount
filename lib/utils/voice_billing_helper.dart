@@ -113,9 +113,10 @@ class VoiceBillingHelper {
       // 2. 创建录音器
       final recorder = AudioRecorder();
 
-      // 3. 按语音识别模式选择录音格式：传统 STT 用 WAV，多模态用 m4a 减小体积
-      final useM4a =
-          speechProvider.audioMode == AIAudioMode.multimodalChat;
+      // 3. 录音格式分流：传统 STT 用 WAV；多模态内置智谱走 SDK 原逻辑(仍录 WAV)；
+      // 自定义 OpenAI 兼容厂商多模态统一 m4a(AAC-LC) + input_audio.format=m4a。
+      final useM4a = speechProvider.audioMode == AIAudioMode.multimodalChat &&
+          !speechProvider.isBuiltIn;
       final ext = useM4a ? 'm4a' : 'wav';
       final tempDir = await getTemporaryDirectory();
       final audioPath =

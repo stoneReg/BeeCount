@@ -270,6 +270,14 @@ class AIProviderManager {
       snapshot['voice_silence_timeout_ms'] =
           prefs.getInt(AIConstants.keyVoiceSilenceTimeoutMs);
     }
+    if (prefs.containsKey(AIConstants.keyAiReasoningLevel)) {
+      snapshot['ai_reasoning_level'] =
+          prefs.getString(AIConstants.keyAiReasoningLevel);
+    }
+    if (prefs.containsKey(AIConstants.keyAiReasoningVendor)) {
+      snapshot['ai_reasoning_vendor'] =
+          prefs.getString(AIConstants.keyAiReasoningVendor);
+    }
     return snapshot;
   }
 
@@ -331,6 +339,19 @@ class AIProviderManager {
             voiceSilenceTimeout) {
       await prefs.setInt(
           AIConstants.keyVoiceSilenceTimeoutMs, voiceSilenceTimeout);
+    }
+
+    final reasoningLevel = config['ai_reasoning_level'] as String?;
+    if (reasoningLevel != null &&
+        reasoningLevel.isNotEmpty &&
+        prefs.getString(AIConstants.keyAiReasoningLevel) != reasoningLevel) {
+      await prefs.setString(AIConstants.keyAiReasoningLevel, reasoningLevel);
+    }
+    final reasoningVendor = config['ai_reasoning_vendor'] as String?;
+    if (reasoningVendor != null &&
+        reasoningVendor.isNotEmpty &&
+        prefs.getString(AIConstants.keyAiReasoningVendor) != reasoningVendor) {
+      await prefs.setString(AIConstants.keyAiReasoningVendor, reasoningVendor);
     }
     logger.info(_tag, 'AI 配置已从 server 应用到本地');
   }
