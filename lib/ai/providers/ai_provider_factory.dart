@@ -531,6 +531,11 @@ class AIProviderFactory {
   static const _requiredChatKeys = {'model', 'messages', 'stream'};
   static const _maxParamStrips = 3;
 
+  static Options get _openAiChatTimeoutOptions => Options(
+        sendTimeout: const Duration(seconds: 120),
+        receiveTimeout: const Duration(seconds: 120),
+      );
+
   /// 上游因「参数不合法」报 4xx 时,返回它点名的那个可丢键(候选只来自我们发出去的键)。
   ///
   /// 推理模型(Moonshot kimi-k2.5 / OpenAI o1·o3 / DeepSeek-R1)把 temperature 锁死成 1,
@@ -725,12 +730,11 @@ class AIProviderFactory {
         ],
       };
 
-      final audioOptions = Options(
-        sendTimeout: const Duration(seconds: 120),
-        receiveTimeout: const Duration(seconds: 120),
+      final response = await _postChatCompletions(
+        dio,
+        body,
+        options: _openAiChatTimeoutOptions,
       );
-      final response =
-          await _postChatCompletions(dio, body, options: audioOptions);
 
       return parseOpenAiChatContent(response.data);
     } on DioException catch (e) {
