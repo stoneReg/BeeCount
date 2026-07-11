@@ -7,6 +7,7 @@ import '../../styles/tokens.dart';
 import '../../utils/ui_scale_extensions.dart';
 import '../../providers/theme_providers.dart';
 import '../../providers/ai_config_providers.dart';
+import '../../providers/audio_mode_providers.dart';
 import '../../l10n/app_localizations.dart';
 import '../../ai/providers/ai_provider_config.dart';
 import '../../ai/providers/ai_provider_manager.dart';
@@ -254,7 +255,83 @@ class _AISettingsPageState extends ConsumerState<AISettingsPage> {
           providers: providers,
           capabilityType: AICapabilityType.speech,
         ),
+        BeeTokens.cardDivider(context),
+        _buildAudioModeTile(),
       ],
+    );
+  }
+
+  /// 语音识别模式（传统转写 / 多模态理解），全局设置。
+  Widget _buildAudioModeTile() {
+    final l10n = AppLocalizations.of(context);
+    final primaryColor = ref.watch(primaryColorProvider);
+    final mode = ref.watch(audioModeSettingsProvider);
+    final isMultimodal = mode == AIAudioMode.multimodalChat;
+
+    return ListTile(
+      dense: true,
+      leading: Icon(Icons.graphic_eq, size: 22, color: primaryColor),
+      title: Text(l10n.aiAudioModeTitle, style: const TextStyle(fontSize: 14)),
+      subtitle: Text(
+        isMultimodal
+            ? l10n.aiAudioModeMultimodal
+            : l10n.aiAudioModeTranscription,
+        style: const TextStyle(fontSize: 12),
+      ),
+      trailing: const Icon(Icons.chevron_right, size: 18),
+      onTap: _showAudioModeDialog,
+    );
+  }
+
+  void _showAudioModeDialog() {
+    final l10n = AppLocalizations.of(context);
+    final primaryColor = ref.read(primaryColorProvider);
+    final currentMode = ref.read(audioModeSettingsProvider);
+    final notifier = ref.read(audioModeSettingsProvider.notifier);
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.aiAudioModeTitle),
+        contentPadding: const EdgeInsets.symmetric(vertical: 8),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (final mode in AIAudioMode.values)
+              RadioListTile<AIAudioMode>(
+                value: mode,
+                groupValue: currentMode,
+                activeColor: primaryColor,
+                title: Text(
+                  mode == AIAudioMode.multimodalChat
+                      ? l10n.aiAudioModeMultimodal
+                      : l10n.aiAudioModeTranscription,
+                  style: const TextStyle(fontSize: 14),
+                ),
+                subtitle: Text(
+                  mode == AIAudioMode.multimodalChat
+                      ? l10n.aiAudioModeMultimodalDesc
+                      : l10n.aiAudioModeTranscriptionDesc,
+                  style: const TextStyle(fontSize: 12),
+                ),
+                onChanged: (value) async {
+                  if (value == null) return;
+                  Navigator.pop(dialogContext);
+                  await notifier.setMode(value);
+                  if (mounted) {
+                    showToast(context, l10n.commonSaved);
+                  }
+                },
+              ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(l10n.commonCancel),
+          ),
+        ],
+      ),
     );
   }
 

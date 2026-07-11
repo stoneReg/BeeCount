@@ -18,6 +18,9 @@ class AIConstants {
   /// 语音触发方式：auto（自动检测停顿）/ hold_to_talk（按住说话）
   static const String keyVoiceTriggerMode = 'voice_trigger_mode';
 
+  /// 语音识别模式：transcription / multimodal_chat（全局，多设备同步）
+  static const String keyAudioMode = 'audio_mode';
+
   // OpenAI 兼容协议配置
   static const String keyAiServiceProvider = 'ai_service_provider';
   static const String keyCustomBaseUrl = 'ai_custom_base_url';

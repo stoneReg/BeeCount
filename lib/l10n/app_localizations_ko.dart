@@ -5862,6 +5862,21 @@ class AppLocalizationsKo extends AppLocalizations {
   String get aiCapabilitySpeechToTextDesc => '음성 기록에 사용됩니다';
 
   @override
+  String get aiAudioModeTitle => 'Voice recognition mode';
+
+  @override
+  String get aiAudioModeTranscription => 'Transcription (STT)';
+
+  @override
+  String get aiAudioModeTranscriptionDesc => 'Transcribe first, then extract; cheaper and faster';
+
+  @override
+  String get aiAudioModeMultimodal => 'Multimodal understanding';
+
+  @override
+  String get aiAudioModeMultimodalDesc => 'Send audio directly to the model to reason and output bills; more robust to accents, higher cost (requires audio-input support)';
+
+  @override
   String get aiProviderTestRun => '눌러서 테스트';
 
   @override

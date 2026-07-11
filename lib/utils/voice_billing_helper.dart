@@ -226,6 +226,8 @@ class _VoiceRecordingDialogState extends ConsumerState<_VoiceRecordingDialog> {
       await widget.recorder.start(
         const RecordConfig(
           encoder: AudioEncoder.wav,
+          sampleRate: 16000,
+          numChannels: 1,
         ),
         path: widget.audioPath,
       );

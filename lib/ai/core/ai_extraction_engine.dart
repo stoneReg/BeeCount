@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import '../providers/ai_provider_config.dart';
 import '../providers/ai_provider_factory.dart';
 import '../../services/system/logger_service.dart';
 import 'ai_extraction_context.dart';
@@ -146,6 +147,11 @@ class DefaultAiExtractionEngine implements AiExtractionEngine {
       return const AudioExtractionResult();
     }
     try {
+      final mode = await AIProviderFactory.resolveAudioMode();
+      if (mode == AIAudioMode.multimodalChat) {
+        return await _extractFromAudioMultimodal(audio, context);
+      }
+
       logger.info(_tag, '步骤1: 语音转文字');
       final recognizedText = await AIProviderFactory.speechToText(
         audio,
@@ -170,6 +176,28 @@ class DefaultAiExtractionEngine implements AiExtractionEngine {
       logger.error(_tag, '语音账单提取异常', e, st);
       return const AudioExtractionResult();
     }
+  }
+
+  /// 多模态一步式：音频 + 提取 Prompt 单次调用直出账单。
+  Future<AudioExtractionResult> _extractFromAudioMultimodal(
+    File audio,
+    AiExtractionContext context,
+  ) async {
+    logger.info(_tag, '多模态语音理解: 音频 + Prompt 一步直出账单');
+    final prompt = _promptBuilder.build(
+      context: context,
+      inputSource: '从这段语音中',
+      billGuard: '',
+    );
+    logger.debug(_tag, '多模态语音 prompt 长度: ${prompt.length}');
+
+    final response = await AIProviderFactory.audioChat(
+      audio,
+      prompt,
+      logTag: _tag,
+    );
+    final bills = _parser.parse(response);
+    return AudioExtractionResult(bills: bills, recognizedText: null);
   }
 
   @override
