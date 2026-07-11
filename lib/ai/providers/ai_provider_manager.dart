@@ -273,6 +273,10 @@ class AIProviderManager {
     if (prefs.containsKey(AIConstants.keyAudioMode)) {
       snapshot['audio_mode'] = prefs.getString(AIConstants.keyAudioMode);
     }
+    if (prefs.containsKey(AIConstants.keyAiReasoningLevel)) {
+      snapshot['ai_reasoning_level'] =
+          prefs.getString(AIConstants.keyAiReasoningLevel);
+    }
     return snapshot;
   }
 
@@ -281,6 +285,7 @@ class AIProviderManager {
     'voice_trigger_mode',
     'voice_silence_timeout_ms',
     'audio_mode',
+    'ai_reasoning_level',
   ];
 
   /// 本地 snapshot 缺失的 mobile-only 字段从 server 补回（server 有则保留）。
@@ -363,6 +368,13 @@ class AIProviderManager {
         audioMode.isNotEmpty &&
         prefs.getString(AIConstants.keyAudioMode) != audioMode) {
       await prefs.setString(AIConstants.keyAudioMode, audioMode);
+    }
+
+    final reasoningLevel = config['ai_reasoning_level'] as String?;
+    if (reasoningLevel != null &&
+        reasoningLevel.isNotEmpty &&
+        prefs.getString(AIConstants.keyAiReasoningLevel) != reasoningLevel) {
+      await prefs.setString(AIConstants.keyAiReasoningLevel, reasoningLevel);
     }
 
     await _migrateLegacyAudioModeIfNeeded(prefs, config);

@@ -141,5 +141,23 @@ void main() {
       final prefs = await SharedPreferences.getInstance();
       expect(prefs.getString(AIConstants.keyAudioMode), 'transcription');
     });
+
+    test('snapshotForSync 携带 ai_reasoning_level（仅 containsKey 时）', () async {
+      SharedPreferences.setMockInitialValues({
+        AIConstants.keyAiReasoningLevel: 'medium',
+      });
+
+      final snapshot = await AIProviderManager.snapshotForSync();
+      expect(snapshot['ai_reasoning_level'], 'medium');
+    });
+
+    test('mergeSnapshotWithServerAiConfig 补回 server reasoning', () {
+      final merged = AIProviderManager.mergeSnapshotWithServerAiConfig(
+        {'providers': [], 'binding': {}},
+        {'ai_reasoning_level': 'low'},
+      );
+      expect(merged['ai_reasoning_level'], 'low');
+    });
+    });
   });
 }

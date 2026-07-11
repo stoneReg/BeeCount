@@ -5877,6 +5877,21 @@ class AppLocalizationsKo extends AppLocalizations {
   String get aiAudioModeMultimodalDesc => 'Send audio directly to the model to reason and output bills; more robust to accents, higher cost (requires audio-input support)';
 
   @override
+  String get aiReasoningTitle => 'Deep reasoning';
+
+  @override
+  String get aiReasoningOff => 'Off';
+
+  @override
+  String get aiReasoningLow => 'Low';
+
+  @override
+  String get aiReasoningMedium => 'Medium';
+
+  @override
+  String get aiReasoningHigh => 'High';
+
+  @override
   String get aiProviderTestRun => '눌러서 테스트';
 
   @override
