@@ -20,6 +20,7 @@ import '../pages/ai/ai_provider_manage_page.dart'
     show aiProviderListRefreshProvider;
 import 'ai_config_providers.dart';
 import 'voice_billing_providers.dart';
+import 'audio_mode_providers.dart';
 import '../services/attachment_service.dart' show attachmentListRefreshProvider;
 import '../services/system/logger_service.dart';
 import '../services/ui/avatar_service.dart';
@@ -285,7 +286,14 @@ final syncServiceProvider = Provider<SyncService>((ref) {
                   ref.invalidate(aiConfigProvider);
                   // 用 reload() 重读本地 prefs 而非 invalidate：后者会重建 notifier,
                   // 期间设置页会短暂闪回默认值；reload 原地刷新更平滑。
+<<<<<<< HEAD
                   ref.read(voiceBillingSettingsProvider.notifier).reload();
+=======
+                  ref
+                      .read(voiceBillingSettingsProvider.notifier)
+                      .reload();
+                  ref.read(audioModeSettingsProvider.notifier).reload();
+>>>>>>> 4eb036a (feat(ai): #357 多模态语音记账 + audio_mode 全局字段)
                 } catch (e, st) {
                   logger.warning(
                       'CloudSync', 'AI 配置 apply 后 UI bump 失败: $e', st);
@@ -308,7 +316,19 @@ final syncServiceProvider = Provider<SyncService>((ref) {
         try {
           final cloud = await ref.read(beecountCloudProviderInstance.future);
           if (cloud == null) return;
-          final snapshot = await AIProviderManager.snapshotForSync();
+          Map<String, dynamic>? serverAiConfig;
+          try {
+            final profile = await cloud.getMyProfile();
+            serverAiConfig = profile.aiConfig;
+          } catch (e, st) {
+            logger.warning(
+                'CloudSync', '拉取 server ai_config 用于 merge 失败: $e', st);
+          }
+          final local = await AIProviderManager.snapshotForSync();
+          final snapshot = AIProviderManager.mergeSnapshotWithServerAiConfig(
+            local,
+            serverAiConfig,
+          );
           await cloud.updateMyProfileAiConfig(aiConfig: snapshot);
           logger.info('CloudSync', 'AI 配置已推送到 server');
         } catch (e, st) {

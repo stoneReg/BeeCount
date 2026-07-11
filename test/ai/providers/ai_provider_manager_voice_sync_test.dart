@@ -54,5 +54,53 @@ void main() {
       expect(prefs.getString(AIConstants.keyVoiceTriggerMode), 'auto');
       expect(prefs.getInt(AIConstants.keyVoiceSilenceTimeoutMs), 1500);
     });
+
+    test('snapshotForSync 携带 audio_mode（仅 containsKey 时）', () async {
+      SharedPreferences.setMockInitialValues({
+        AIConstants.keyAudioMode: 'multimodal_chat',
+      });
+
+      final snapshot = await AIProviderManager.snapshotForSync();
+      expect(snapshot['audio_mode'], 'multimodal_chat');
+    });
+
+    test('snapshotForSync 未设置 audio_mode 时不携带', () async {
+      SharedPreferences.setMockInitialValues({});
+
+      final snapshot = await AIProviderManager.snapshotForSync();
+      expect(snapshot.containsKey('audio_mode'), isFalse);
+    });
+
+    test('applyFromServer 落地 audio_mode', () async {
+      SharedPreferences.setMockInitialValues({});
+
+      await AIProviderManager.applyFromServer({
+        'audio_mode': 'multimodal_chat',
+      });
+
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString(AIConstants.keyAudioMode), 'multimodal_chat');
+    });
+
+    test('mergeSnapshotWithServerAiConfig 补回 server audio_mode', () {
+      final local = <String, dynamic>{'providers': [], 'binding': {}};
+      final merged = AIProviderManager.mergeSnapshotWithServerAiConfig(
+        local,
+        {'audio_mode': 'multimodal_chat'},
+      );
+      expect(merged['audio_mode'], 'multimodal_chat');
+    });
+
+    test('mergeSnapshotWithServerAiConfig 本地已有 audio_mode 不被 server 覆盖', () {
+      final local = <String, dynamic>{
+        'audio_mode': 'transcription',
+        'providers': [],
+      };
+      final merged = AIProviderManager.mergeSnapshotWithServerAiConfig(
+        local,
+        {'audio_mode': 'multimodal_chat'},
+      );
+      expect(merged['audio_mode'], 'transcription');
+    });
   });
 }

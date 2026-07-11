@@ -270,7 +270,32 @@ class AIProviderManager {
       snapshot['voice_silence_timeout_ms'] =
           prefs.getInt(AIConstants.keyVoiceSilenceTimeoutMs);
     }
+    if (prefs.containsKey(AIConstants.keyAudioMode)) {
+      snapshot['audio_mode'] = prefs.getString(AIConstants.keyAudioMode);
+    }
     return snapshot;
+  }
+
+  /// 推送前与 server 已有 ai_config 合并 mobile-only 字段，避免整包替换抹掉他机配置。
+  static const _mobileOnlySyncFieldKeys = [
+    'voice_trigger_mode',
+    'voice_silence_timeout_ms',
+    'audio_mode',
+  ];
+
+  /// 本地 snapshot 缺失的 mobile-only 字段从 server 补回（server 有则保留）。
+  static Map<String, dynamic> mergeSnapshotWithServerAiConfig(
+    Map<String, dynamic> local,
+    Map<String, dynamic>? server,
+  ) {
+    final merged = Map<String, dynamic>.from(local);
+    final serverMap = server ?? {};
+    for (final key in _mobileOnlySyncFieldKeys) {
+      if (!merged.containsKey(key) && serverMap.containsKey(key)) {
+        merged[key] = serverMap[key];
+      }
+    }
+    return merged;
   }
 
   /// 把 server /profile/me 返回的 ai_config dict 落到本地 SharedPreferences。
@@ -331,6 +356,13 @@ class AIProviderManager {
             voiceSilenceTimeout) {
       await prefs.setInt(
           AIConstants.keyVoiceSilenceTimeoutMs, voiceSilenceTimeout);
+    }
+
+    final audioMode = config['audio_mode'] as String?;
+    if (audioMode != null &&
+        audioMode.isNotEmpty &&
+        prefs.getString(AIConstants.keyAudioMode) != audioMode) {
+      await prefs.setString(AIConstants.keyAudioMode, audioMode);
     }
     logger.info(_tag, 'AI 配置已从 server 应用到本地');
   }
