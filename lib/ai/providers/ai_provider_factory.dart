@@ -612,12 +612,18 @@ class AIProviderFactory {
       };
       await _mergeReasoningIntoBody(body);
 
-      final chatOptions = Options(
-        sendTimeout: const Duration(seconds: 120),
-        receiveTimeout: const Duration(seconds: 120),
+      final reasoningEffort = body['reasoning_effort'];
+      logger.debug(
+        'AIFactory',
+        '请求(文本对话): ${config.baseUrl}/chat/completions'
+        '${reasoningEffort != null ? ', reasoning_effort=$reasoningEffort' : ''}',
       );
-      final response =
-          await _postChatCompletions(dio, body, options: chatOptions);
+
+      final response = await _postChatCompletions(
+        dio,
+        body,
+        options: _openAiChatTimeoutOptions,
+      );
 
       return parseOpenAiChatContent(response.data);
     } on DioException catch (e) {
@@ -650,12 +656,11 @@ class AIProviderFactory {
     );
 
     try {
-      final visionOptions = Options(
-        sendTimeout: const Duration(seconds: 120),
-        receiveTimeout: const Duration(seconds: 120),
+      final response = await _postChatCompletions(
+        dio,
+        body,
+        options: _openAiChatTimeoutOptions,
       );
-      final response =
-          await _postChatCompletions(dio, body, options: visionOptions);
 
       return parseOpenAiChatContent(response.data);
     } on DioException catch (e) {
