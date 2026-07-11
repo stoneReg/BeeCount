@@ -102,5 +102,44 @@ void main() {
       );
       expect(merged['audio_mode'], 'transcription');
     });
+
+    test('applyFromServer 从旧版 provider.audioMode 迁移全局 audio_mode', () async {
+      SharedPreferences.setMockInitialValues({});
+
+      await AIProviderManager.applyFromServer({
+        'providers': [
+          {
+            'id': 'speech_p',
+            'name': 'Speech',
+            'apiKey': 'k',
+            'audioModel': 'gpt-4o-audio',
+            'audioMode': 'multimodal_chat',
+          },
+        ],
+        'binding': {'speechProviderId': 'speech_p'},
+      });
+
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString(AIConstants.keyAudioMode), 'multimodal_chat');
+    });
+
+    test('applyFromServer 顶层 audio_mode 优先于 provider.audioMode', () async {
+      SharedPreferences.setMockInitialValues({});
+
+      await AIProviderManager.applyFromServer({
+        'audio_mode': 'transcription',
+        'providers': [
+          {
+            'id': 'speech_p',
+            'name': 'Speech',
+            'audioMode': 'multimodal_chat',
+          },
+        ],
+        'binding': {'speechProviderId': 'speech_p'},
+      });
+
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString(AIConstants.keyAudioMode), 'transcription');
+    });
   });
 }

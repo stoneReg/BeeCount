@@ -33,6 +33,7 @@ class _AISettingsPageState extends ConsumerState<AISettingsPage> {
     // 存量用户:升级前已开启 AI 但从未同意第三方数据共享 → 进入设置页补弹一次。
     // 其它直接使用 AI 的入口由 AIProviderFactory 的二道关兜底(未同意即中止)。
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await ref.read(audioModeSettingsProvider.notifier).ensureLoaded();
       if (!mounted) return;
       final enabled = ref.read(aiConfigProvider).enabled;
       if (!enabled) return;

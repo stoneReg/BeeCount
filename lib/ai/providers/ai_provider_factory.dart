@@ -742,25 +742,25 @@ class AIProviderFactory {
   @visibleForTesting
   static String parseOpenAiChatContent(dynamic data) {
     if (data is! Map<String, dynamic>) {
-      throw AIException('多模态语音响应格式无效');
+      throw AIException('chat/completions 响应格式无效');
     }
     final choices = data['choices'];
     if (choices is! List || choices.isEmpty) {
-      throw AIException('多模态语音响应缺少 choices');
+      throw AIException('chat/completions 响应缺少 choices');
     }
     final first = choices.first;
     if (first is! Map<String, dynamic>) {
-      throw AIException('多模态语音响应 choices 项无效');
+      throw AIException('chat/completions 响应 choices 项无效');
     }
     final message = first['message'];
     if (message is! Map<String, dynamic>) {
-      throw AIException('多模态语音响应缺少 message');
+      throw AIException('chat/completions 响应缺少 message');
     }
     final content = message['content'];
     if (content is String) {
       final trimmed = content.trim();
       if (trimmed.isEmpty) {
-        throw AIException('多模态语音响应 content 为空');
+        throw AIException('chat/completions 响应 content 为空');
       }
       return trimmed;
     }
@@ -776,11 +776,11 @@ class AIProviderFactory {
       }
       final joined = buffer.toString().trim();
       if (joined.isEmpty) {
-        throw AIException('多模态语音响应 content 为空');
+        throw AIException('chat/completions 响应 content 为空');
       }
       return joined;
     }
-    throw AIException('多模态语音响应 content 为空');
+    throw AIException('chat/completions 响应 content 为空');
   }
 
   /// 由文件扩展名推断 input_audio 的 format，须与录音扩展名/编码严格一致。
