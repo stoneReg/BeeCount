@@ -10,6 +10,7 @@ import '../providers.dart';
 import '../providers/ai_chat_providers.dart';
 import '../providers/ai_config_providers.dart';
 import '../providers/voice_billing_providers.dart';
+import '../providers/audio_mode_providers.dart';
 import '../services/system/logger_service.dart';
 import '../ai/providers/ai_provider_manager.dart';
 import '../ai/providers/ai_provider_config.dart';
@@ -32,6 +33,8 @@ class VoiceBillingHelper {
       await ref.read(aiConfigProvider.notifier).ensureLoaded();
       // 确保语音记账设置（触发方式 / 静音阈值）已加载
       await ref.read(voiceBillingSettingsProvider.notifier).ensureLoaded();
+      // 确保语音识别模式（传统转写 / 多模态）已加载
+      await ref.read(audioModeSettingsProvider.notifier).ensureLoaded();
 
       // 检查AI是否启用
       final aiConfig = ref.read(aiConfigProvider);
