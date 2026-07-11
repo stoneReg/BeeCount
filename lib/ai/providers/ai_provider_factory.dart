@@ -821,6 +821,7 @@ class AIProviderFactory {
           },
         ],
       };
+      await _mergeReasoningIntoBody(body);
 
       final response = await _postChatCompletions(
         dio,
@@ -832,51 +833,6 @@ class AIProviderFactory {
     } on DioException catch (e) {
       throw AIException(_extractDioError(e));
     }
-  }
-
-  /// 从 OpenAI 兼容 chat/completions 响应中解析 message.content 文本。
-  @visibleForTesting
-  static String parseOpenAiChatContent(dynamic data) {
-    if (data is! Map<String, dynamic>) {
-      throw AIException('chat/completions 响应格式无效');
-    }
-    final choices = data['choices'];
-    if (choices is! List || choices.isEmpty) {
-      throw AIException('chat/completions 响应缺少 choices');
-    }
-    final first = choices.first;
-    if (first is! Map<String, dynamic>) {
-      throw AIException('chat/completions 响应 choices 项无效');
-    }
-    final message = first['message'];
-    if (message is! Map<String, dynamic>) {
-      throw AIException('chat/completions 响应缺少 message');
-    }
-    final content = message['content'];
-    if (content is String) {
-      final trimmed = content.trim();
-      if (trimmed.isEmpty) {
-        throw AIException('chat/completions 响应 content 为空');
-      }
-      return trimmed;
-    }
-    if (content is List) {
-      final buffer = StringBuffer();
-      for (final part in content) {
-        if (part is Map<String, dynamic>) {
-          final text = part['text'];
-          if (text is String && text.isNotEmpty) {
-            buffer.write(text);
-          }
-        }
-      }
-      final joined = buffer.toString().trim();
-      if (joined.isEmpty) {
-        throw AIException('chat/completions 响应 content 为空');
-      }
-      return joined;
-    }
-    throw AIException('chat/completions 响应 content 为空');
   }
 
   /// 由文件扩展名推断 input_audio 的 format，须与录音扩展名/编码严格一致。
