@@ -364,7 +364,41 @@ class AIProviderManager {
         prefs.getString(AIConstants.keyAudioMode) != audioMode) {
       await prefs.setString(AIConstants.keyAudioMode, audioMode);
     }
+
+    await _migrateLegacyAudioModeIfNeeded(prefs, config);
     logger.info(_tag, 'AI 配置已从 server 应用到本地');
+  }
+
+  /// 本机从未配置 audio_mode 时，从 server 顶层字段或旧版 per-provider audioMode 迁移。
+  static Future<void> _migrateLegacyAudioModeIfNeeded(
+    SharedPreferences prefs,
+    Map<String, dynamic> config,
+  ) async {
+    if (prefs.containsKey(AIConstants.keyAudioMode)) return;
+
+    final topLevel = config['audio_mode'] as String?;
+    if (topLevel != null && topLevel.isNotEmpty) {
+      await prefs.setString(AIConstants.keyAudioMode, topLevel);
+      return;
+    }
+
+    final rawProviders = config['providers'];
+    final rawBinding = config['binding'];
+    if (rawProviders is! List || rawBinding is! Map) return;
+
+    final speechId = rawBinding['speechProviderId'] as String?;
+    if (speechId == null || speechId.isEmpty) return;
+
+    for (final item in rawProviders) {
+      if (item is! Map) continue;
+      if (item['id'] != speechId) continue;
+      final legacy = item['audioMode'] as String?;
+      if (legacy != null && legacy.isNotEmpty) {
+        await prefs.setString(AIConstants.keyAudioMode, legacy);
+        logger.info(_tag, '已从旧版 provider.audioMode 迁移全局 audio_mode: $legacy');
+      }
+      return;
+    }
   }
 
   /// 设置单个能力的服务商
