@@ -8,6 +8,8 @@ import '../../utils/ui_scale_extensions.dart';
 import '../../providers/theme_providers.dart';
 import '../../providers/ai_config_providers.dart';
 import '../../providers/audio_mode_providers.dart';
+import '../../providers/ai_reasoning_providers.dart';
+import '../../ai/providers/ai_reasoning_adapter.dart';
 import '../../l10n/app_localizations.dart';
 import '../../ai/providers/ai_provider_config.dart';
 import '../../ai/providers/ai_provider_manager.dart';
@@ -463,6 +465,8 @@ class _AISettingsPageState extends ConsumerState<AISettingsPage> {
     final l10n = AppLocalizations.of(context);
     final primaryColor = ref.watch(primaryColorProvider);
     final notifier = ref.read(aiConfigProvider.notifier);
+    final reasoning = ref.watch(aiReasoningSettingsProvider);
+    final reasoningNotifier = ref.read(aiReasoningSettingsProvider.notifier);
 
     return SectionCard(
       margin: EdgeInsets.zero,
@@ -577,6 +581,45 @@ class _AISettingsPageState extends ConsumerState<AISettingsPage> {
 
             BeeTokens.cardDivider(context),
 
+            // === 深度思考 ===
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+              child: Row(
+                children: [
+                  Icon(Icons.psychology_outlined,
+                      size: 18, color: BeeTokens.textSecondary(context)),
+                  const SizedBox(width: 8),
+                  Text(
+                    l10n.aiReasoningTitle,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: BeeTokens.textSecondary(context),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            for (final level in AIReasoningLevel.values)
+              RadioListTile<AIReasoningLevel>(
+                value: level,
+                groupValue: reasoning.level,
+                onChanged: (value) async {
+                  if (value == null) return;
+                  await reasoningNotifier.save(value);
+                  if (mounted) {
+                    showToast(context, l10n.commonSaved);
+                  }
+                },
+                title: Text(_reasoningLevelLabel(l10n, level),
+                    style: const TextStyle(fontSize: 14)),
+                activeColor: primaryColor,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                dense: true,
+              ),
+
+            BeeTokens.cardDivider(context),
+
             // 历史「本地模型(训练中)」占位 entry 已删除(2026-05-24)。本地 AI 视觉
             // 未来走 Apple Foundation Models / Gemini Nano(平台原生 SDK,非 tflite),
             // 详见 .docs/on-device-vlm/README.md。
@@ -603,5 +646,18 @@ class _AISettingsPageState extends ConsumerState<AISettingsPage> {
         ),
       ),
     );
+  }
+
+  String _reasoningLevelLabel(AppLocalizations l10n, AIReasoningLevel level) {
+    switch (level) {
+      case AIReasoningLevel.off:
+        return l10n.aiReasoningOff;
+      case AIReasoningLevel.low:
+        return l10n.aiReasoningLow;
+      case AIReasoningLevel.medium:
+        return l10n.aiReasoningMedium;
+      case AIReasoningLevel.high:
+        return l10n.aiReasoningHigh;
+    }
   }
 }

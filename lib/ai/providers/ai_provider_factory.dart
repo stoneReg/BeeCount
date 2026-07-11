@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'ai_provider_config.dart';
 import 'ai_provider_manager.dart';
 import 'ai_constants.dart';
+import 'ai_reasoning_adapter.dart';
 import '../../services/system/logger_service.dart';
 
 /// AI Provider 工厂类
@@ -604,16 +605,21 @@ class AIProviderFactory {
     logger.debug('AIFactory', '请求: ${config.baseUrl}/chat/completions');
 
     try {
-      final response = await _postChatCompletions(dio, {
+      final body = <String, dynamic>{
         'model': config.textModel,
         'messages': messages,
         'temperature': temperature,
-      });
+      };
+      await _mergeReasoningIntoBody(body);
 
-      final data = response.data as Map<String, dynamic>;
-      final choices = data['choices'] as List;
-      final message = choices.first['message'] as Map<String, dynamic>;
-      return message['content'] as String;
+      final chatOptions = Options(
+        sendTimeout: const Duration(seconds: 120),
+        receiveTimeout: const Duration(seconds: 120),
+      );
+      final response =
+          await _postChatCompletions(dio, body, options: chatOptions);
+
+      return parseOpenAiChatContent(response.data);
     } on DioException catch (e) {
       throw AIException(_extractDioError(e));
     }
@@ -629,38 +635,121 @@ class AIProviderFactory {
     final imageBytes = await image.readAsBytes();
     final base64Image = base64Encode(imageBytes);
 
-    logger.debug('AIFactory', '请求: ${config.baseUrl}/chat/completions');
+    final body = buildOpenAiVisionChatBody(
+      visionModel: config.visionModel,
+      prompt: prompt,
+      base64Image: base64Image,
+    );
+    await _mergeReasoningIntoBody(body);
+
+    final reasoningEffort = body['reasoning_effort'];
+    logger.debug(
+      'AIFactory',
+      '请求(图片理解): ${config.baseUrl}/chat/completions'
+      '${reasoningEffort != null ? ', reasoning_effort=$reasoningEffort' : ''}',
+    );
 
     try {
-      final response = await dio.post(
-        '/chat/completions',
-        data: {
-          'model': config.visionModel,
-          'messages': [
-            {
-              'role': 'user',
-              'content': [
-                {'type': 'text', 'text': prompt},
-                {
-                  'type': 'image_url',
-                  'image_url': {
-                    'url': 'data:image/jpeg;base64,$base64Image',
-                  },
-                },
-              ],
-            },
-          ],
-        },
+      final visionOptions = Options(
+        sendTimeout: const Duration(seconds: 120),
+        receiveTimeout: const Duration(seconds: 120),
       );
+      final response =
+          await _postChatCompletions(dio, body, options: visionOptions);
 
-      final data = response.data as Map<String, dynamic>;
-      final choices = data['choices'] as List;
-      final message = choices.first['message'] as Map<String, dynamic>;
-      return message['content'] as String;
+      return parseOpenAiChatContent(response.data);
     } on DioException catch (e) {
       throw AIException(_extractDioError(e));
     }
   }
+
+  /// 构建 OpenAI 兼容图片理解 chat/completions 请求体（不含深度思考字段）。
+  @visibleForTesting
+  static Map<String, dynamic> buildOpenAiVisionChatBody({
+    required String visionModel,
+    required String prompt,
+    required String base64Image,
+  }) {
+    return {
+      'model': visionModel,
+      'messages': [
+        {
+          'role': 'user',
+          'content': [
+            {'type': 'text', 'text': prompt},
+            {
+              'type': 'image_url',
+              'image_url': {
+                'url': 'data:image/jpeg;base64,$base64Image',
+              },
+            },
+          ],
+        },
+      ],
+    };
+  }
+
+  /// 从 OpenAI 兼容 chat/completions 响应中解析 message.content 文本。
+  @visibleForTesting
+  static String parseOpenAiChatContent(dynamic data) {
+    if (data is! Map<String, dynamic>) {
+      throw AIException('chat/completions 响应格式无效');
+    }
+    final choices = data['choices'];
+    if (choices is! List || choices.isEmpty) {
+      throw AIException('chat/completions 响应缺少 choices');
+    }
+    final first = choices.first;
+    if (first is! Map<String, dynamic>) {
+      throw AIException('chat/completions 响应 choices 项无效');
+    }
+    final message = first['message'];
+    if (message is! Map<String, dynamic>) {
+      throw AIException('chat/completions 响应缺少 message');
+    }
+    final content = message['content'];
+    if (content is String) {
+      final trimmed = content.trim();
+      if (trimmed.isEmpty) {
+        throw AIException('chat/completions 响应 content 为空');
+      }
+      return trimmed;
+    }
+    if (content is List) {
+      final buffer = StringBuffer();
+      for (final part in content) {
+        if (part is Map<String, dynamic>) {
+          final text = part['text'];
+          if (text is String && text.isNotEmpty) {
+            buffer.write(text);
+          }
+        }
+      }
+      final joined = buffer.toString().trim();
+      if (joined.isEmpty) {
+        throw AIException('chat/completions 响应 content 为空');
+      }
+      return joined;
+    }
+    throw AIException('chat/completions 响应 content 为空');
+  }
+
+  static Future<void> _mergeReasoningIntoBody(
+    Map<String, dynamic> body,
+  ) async {
+    final level = await ReasoningAdapter.loadLevelFromPrefs();
+    final extra = ReasoningAdapter.buildExtraBody(level: level);
+    if (extra != null) {
+      body.addAll(extra);
+    }
+  }
+
+  /// 供单测验证 vision/chat 等路径会合并全局深度思考配置。
+  @visibleForTesting
+  static Future<void> mergeReasoningIntoBodyForTest(
+    Map<String, dynamic> body,
+  ) =>
+      _mergeReasoningIntoBody(body);
 
   static Future<String> _speechToTextOpenAI(
     AIServiceProviderConfig config,
