@@ -158,6 +158,25 @@ void main() {
       );
       expect(merged['ai_reasoning_level'], 'low');
     });
+
+    test('applyFromServer 落地 ai_reasoning_level=off 可传播关闭', () async {
+      SharedPreferences.setMockInitialValues({
+        AIConstants.keyAiReasoningLevel: 'high',
+      });
+
+      await AIProviderManager.applyFromServer({
+        'ai_reasoning_level': 'off',
+      });
+
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString(AIConstants.keyAiReasoningLevel), 'off');
+    });
+
+    test('snapshotForSync 未设置 reasoning 时不携带', () async {
+      SharedPreferences.setMockInitialValues({});
+
+      final snapshot = await AIProviderManager.snapshotForSync();
+      expect(snapshot.containsKey('ai_reasoning_level'), isFalse);
     });
   });
 }

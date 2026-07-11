@@ -28,6 +28,16 @@ void main() {
       await AIProviderFactory.mergeReasoningIntoBodyForTest(body);
       expect(body.containsKey('reasoning_effort'), isFalse);
     });
+
+    test('low 档位合并 minimal', () async {
+      SharedPreferences.setMockInitialValues({
+        AIConstants.keyAiReasoningLevel: 'low',
+      });
+
+      final body = <String, dynamic>{'model': 'gpt-4o'};
+      await AIProviderFactory.mergeReasoningIntoBodyForTest(body);
+      expect(body['reasoning_effort'], 'minimal');
+    });
   });
 
   group('buildOpenAiVisionChatBody', () {
