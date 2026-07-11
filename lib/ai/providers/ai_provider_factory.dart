@@ -602,8 +602,6 @@ class AIProviderFactory {
     }
     messages.add({'role': 'user', 'content': prompt});
 
-    logger.debug('AIFactory', '请求: ${config.baseUrl}/chat/completions');
-
     try {
       final body = <String, dynamic>{
         'model': config.textModel,
