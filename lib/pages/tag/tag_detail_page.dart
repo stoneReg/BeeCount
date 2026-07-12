@@ -302,10 +302,10 @@ class _TagDetailPageState extends ConsumerState<TagDetailPage> {
               dateText: dateKey,
               expense: dayTransactions
                   .where((t) => t.type == 'expense')
-                  .fold(0.0, (sum, t) => sum + t.amount),
+                  .fold(0.0, (sum, t) => sum + (t.nativeAmount ?? t.amount)),
               income: dayTransactions
                   .where((t) => t.type == 'income')
-                  .fold(0.0, (sum, t) => sum + t.amount),
+                  .fold(0.0, (sum, t) => sum + (t.nativeAmount ?? t.amount)),
             ),
             ...dayTransactions.map((transaction) {
               // 共享账本交易的分类挂在 categorySyncIdOverride(syncId)，转 synthetic id 查；
@@ -325,6 +325,8 @@ class _TagDetailPageState extends ConsumerState<TagDetailPage> {
                 categoryName: categoryName,
                 ledgerName: ledgerNames[transaction.ledgerId],
                 amount: transaction.amount,
+                currencyCode: transaction.currencyCode,
+                nativeAmount: transaction.nativeAmount,
                 isExpense: transaction.type == 'expense',
                 happenedAt: transaction.happenedAt,
                 onTap: () async {

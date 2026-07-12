@@ -140,10 +140,10 @@ class _SearchPageState extends ConsumerState<SearchPage> {
       _searchResults = results;
       _totalExpense = results
           .where((e) => e.t.type == 'expense')
-          .fold(0.0, (sum, e) => sum + e.t.amount.abs());
+          .fold(0.0, (sum, e) => sum + (e.t.nativeAmount ?? e.t.amount).abs());
       _totalIncome = results
           .where((e) => e.t.type == 'income')
-          .fold(0.0, (sum, e) => sum + e.t.amount.abs());
+          .fold(0.0, (sum, e) => sum + (e.t.nativeAmount ?? e.t.amount).abs());
       _isSearching = false;
     });
   }
@@ -1032,6 +1032,8 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                                 title: subtitle,
                                 categoryName: categoryName,
                                 amount: item.t.amount,
+                                currencyCode: item.t.currencyCode,
+                                nativeAmount: item.t.nativeAmount,
                                 isExpense: isExpense,
                                 hide: hide,
                                 happenedAt: item.t.happenedAt,
