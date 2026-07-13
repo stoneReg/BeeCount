@@ -17,6 +17,8 @@ import '../ai/providers/ai_provider_manager.dart';
 import '../pages/ai/ai_provider_manage_page.dart' show aiProviderListRefreshProvider;
 import 'ai_config_providers.dart';
 import 'voice_billing_providers.dart';
+import 'audio_mode_providers.dart';
+import 'ai_reasoning_providers.dart';
 import '../services/attachment_service.dart' show attachmentListRefreshProvider;
 import '../services/system/logger_service.dart';
 import '../services/ui/avatar_service.dart';
@@ -287,6 +289,8 @@ final syncServiceProvider = Provider<SyncService>((ref) {
                   ref
                       .read(voiceBillingSettingsProvider.notifier)
                       .reload();
+                  ref.read(audioModeSettingsProvider.notifier).reload();
+                  ref.read(aiReasoningSettingsProvider.notifier).reload();
                 } catch (e, st) {
                   logger.warning(
                       'CloudSync', 'AI 配置 apply 后 UI bump 失败: $e', st);
@@ -309,7 +313,19 @@ final syncServiceProvider = Provider<SyncService>((ref) {
         try {
           final cloud = await ref.read(beecountCloudProviderInstance.future);
           if (cloud == null) return;
-          final snapshot = await AIProviderManager.snapshotForSync();
+          Map<String, dynamic>? serverAiConfig;
+          try {
+            final profile = await cloud.getMyProfile();
+            serverAiConfig = profile.aiConfig;
+          } catch (e, st) {
+            logger.warning(
+                'CloudSync', '拉取 server ai_config 用于 merge 失败: $e', st);
+          }
+          final local = await AIProviderManager.snapshotForSync();
+          final snapshot = AIProviderManager.mergeSnapshotWithServerAiConfig(
+            local,
+            serverAiConfig,
+          );
           await cloud.updateMyProfileAiConfig(aiConfig: snapshot);
           logger.info('CloudSync', 'AI 配置已推送到 server');
         } catch (e, st) {

@@ -11252,6 +11252,66 @@ abstract class AppLocalizations {
   /// **'For voice billing'**
   String get aiCapabilitySpeechToTextDesc;
 
+  /// No description provided for @aiAudioModeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice recognition mode'**
+  String get aiAudioModeTitle;
+
+  /// No description provided for @aiAudioModeTranscription.
+  ///
+  /// In en, this message translates to:
+  /// **'Transcription (STT)'**
+  String get aiAudioModeTranscription;
+
+  /// No description provided for @aiAudioModeTranscriptionDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Transcribe first, then extract; cheaper and faster'**
+  String get aiAudioModeTranscriptionDesc;
+
+  /// No description provided for @aiAudioModeMultimodal.
+  ///
+  /// In en, this message translates to:
+  /// **'Multimodal understanding'**
+  String get aiAudioModeMultimodal;
+
+  /// No description provided for @aiAudioModeMultimodalDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Send audio directly to the model to reason and output bills; more robust to accents, higher cost (requires audio-input support)'**
+  String get aiAudioModeMultimodalDesc;
+
+  /// No description provided for @aiReasoningTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Deep reasoning'**
+  String get aiReasoningTitle;
+
+  /// No description provided for @aiReasoningOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get aiReasoningOff;
+
+  /// No description provided for @aiReasoningLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Low'**
+  String get aiReasoningLow;
+
+  /// No description provided for @aiReasoningMedium.
+  ///
+  /// In en, this message translates to:
+  /// **'Medium'**
+  String get aiReasoningMedium;
+
+  /// No description provided for @aiReasoningHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'High'**
+  String get aiReasoningHigh;
+
   /// No description provided for @aiProviderTestRun.
   ///
   /// In en, this message translates to:

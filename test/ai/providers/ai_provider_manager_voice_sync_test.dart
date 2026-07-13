@@ -54,5 +54,129 @@ void main() {
       expect(prefs.getString(AIConstants.keyVoiceTriggerMode), 'auto');
       expect(prefs.getInt(AIConstants.keyVoiceSilenceTimeoutMs), 1500);
     });
+
+    test('snapshotForSync 携带 audio_mode（仅 containsKey 时）', () async {
+      SharedPreferences.setMockInitialValues({
+        AIConstants.keyAudioMode: 'multimodal_chat',
+      });
+
+      final snapshot = await AIProviderManager.snapshotForSync();
+      expect(snapshot['audio_mode'], 'multimodal_chat');
+    });
+
+    test('snapshotForSync 未设置 audio_mode 时不携带', () async {
+      SharedPreferences.setMockInitialValues({});
+
+      final snapshot = await AIProviderManager.snapshotForSync();
+      expect(snapshot.containsKey('audio_mode'), isFalse);
+    });
+
+    test('applyFromServer 落地 audio_mode', () async {
+      SharedPreferences.setMockInitialValues({});
+
+      await AIProviderManager.applyFromServer({
+        'audio_mode': 'multimodal_chat',
+      });
+
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString(AIConstants.keyAudioMode), 'multimodal_chat');
+    });
+
+    test('mergeSnapshotWithServerAiConfig 补回 server audio_mode', () {
+      final local = <String, dynamic>{'providers': [], 'binding': {}};
+      final merged = AIProviderManager.mergeSnapshotWithServerAiConfig(
+        local,
+        {'audio_mode': 'multimodal_chat'},
+      );
+      expect(merged['audio_mode'], 'multimodal_chat');
+    });
+
+    test('mergeSnapshotWithServerAiConfig 本地已有 audio_mode 不被 server 覆盖', () {
+      final local = <String, dynamic>{
+        'audio_mode': 'transcription',
+        'providers': [],
+      };
+      final merged = AIProviderManager.mergeSnapshotWithServerAiConfig(
+        local,
+        {'audio_mode': 'multimodal_chat'},
+      );
+      expect(merged['audio_mode'], 'transcription');
+    });
+
+    test('applyFromServer 从旧版 provider.audioMode 迁移全局 audio_mode', () async {
+      SharedPreferences.setMockInitialValues({});
+
+      await AIProviderManager.applyFromServer({
+        'providers': [
+          {
+            'id': 'speech_p',
+            'name': 'Speech',
+            'apiKey': 'k',
+            'audioModel': 'gpt-4o-audio',
+            'audioMode': 'multimodal_chat',
+          },
+        ],
+        'binding': {'speechProviderId': 'speech_p'},
+      });
+
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString(AIConstants.keyAudioMode), 'multimodal_chat');
+    });
+
+    test('applyFromServer 顶层 audio_mode 优先于 provider.audioMode', () async {
+      SharedPreferences.setMockInitialValues({});
+
+      await AIProviderManager.applyFromServer({
+        'audio_mode': 'transcription',
+        'providers': [
+          {
+            'id': 'speech_p',
+            'name': 'Speech',
+            'audioMode': 'multimodal_chat',
+          },
+        ],
+        'binding': {'speechProviderId': 'speech_p'},
+      });
+
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString(AIConstants.keyAudioMode), 'transcription');
+    });
+
+    test('snapshotForSync 携带 ai_reasoning_level（仅 containsKey 时）', () async {
+      SharedPreferences.setMockInitialValues({
+        AIConstants.keyAiReasoningLevel: 'medium',
+      });
+
+      final snapshot = await AIProviderManager.snapshotForSync();
+      expect(snapshot['ai_reasoning_level'], 'medium');
+    });
+
+    test('mergeSnapshotWithServerAiConfig 补回 server reasoning', () {
+      final merged = AIProviderManager.mergeSnapshotWithServerAiConfig(
+        {'providers': [], 'binding': {}},
+        {'ai_reasoning_level': 'low'},
+      );
+      expect(merged['ai_reasoning_level'], 'low');
+    });
+
+    test('applyFromServer 落地 ai_reasoning_level=off 可传播关闭', () async {
+      SharedPreferences.setMockInitialValues({
+        AIConstants.keyAiReasoningLevel: 'high',
+      });
+
+      await AIProviderManager.applyFromServer({
+        'ai_reasoning_level': 'off',
+      });
+
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString(AIConstants.keyAiReasoningLevel), 'off');
+    });
+
+    test('snapshotForSync 未设置 reasoning 时不携带', () async {
+      SharedPreferences.setMockInitialValues({});
+
+      final snapshot = await AIProviderManager.snapshotForSync();
+      expect(snapshot.containsKey('ai_reasoning_level'), isFalse);
+    });
   });
 }
