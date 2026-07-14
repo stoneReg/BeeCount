@@ -28,6 +28,7 @@ import 'pages/ai/ai_chat_page.dart';
 import 'services/platform/app_link_service.dart';
 import 'services/platform/quick_actions_service.dart';
 import 'services/system/logger_service.dart';
+import 'services/system/update_service.dart';
 import 'services/security/app_lock_service.dart';
 import 'providers/security_providers.dart';
 import 'styles/tokens.dart';
@@ -103,6 +104,7 @@ class _BeeAppState extends ConsumerState<BeeApp>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _setupAppLinkListener();
       _setupQuickActions();
+      UpdateService.scheduleStartupUpdateCheck(context);
     });
   }
 

@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'logger_service.dart';
 import '../../widgets/ui/ui.dart';
@@ -58,6 +60,66 @@ String _localizeUpdateMessage(BuildContext context, String? message) {
 
 class UpdateService {
   UpdateService._();
+
+  static bool _startupUpdateCheckDone = false;
+
+  /// 应用启动后静默检查更新；仅在有新版本时弹窗提示。
+  static void scheduleStartupUpdateCheck(BuildContext context) {
+    if (_startupUpdateCheckDone) return;
+    if (!Platform.isAndroid) return;
+    if (kDebugMode) return;
+    if (const bool.fromEnvironment('GOOGLE_PLAY', defaultValue: false)) return;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(const Duration(milliseconds: 800), () {
+        if (!context.mounted) return;
+        unawaited(checkUpdateOnStartup(context));
+      });
+    });
+  }
+
+  /// 启动时检查更新：无更新或检查失败均静默，仅发现新版本时弹窗。
+  static Future<void> checkUpdateOnStartup(BuildContext context) async {
+    if (_startupUpdateCheckDone) return;
+    if (!Platform.isAndroid) return;
+    if (const bool.fromEnvironment('GOOGLE_PLAY', defaultValue: false)) return;
+
+    _startupUpdateCheckDone = true;
+
+    try {
+      logger.info('UpdateService', '启动时自动检查更新...');
+      final checkResult = await checkUpdate();
+      if (!context.mounted || !checkResult.hasUpdate) return;
+
+      final shouldDownload = await UpdateDialogs.showDownloadConfirmDialog(
+        context,
+        checkResult.version ?? '',
+        checkResult.releaseNotes ?? '',
+      );
+      if (!shouldDownload || !context.mounted) return;
+
+      final downloadResult = await downloadAndInstallUpdate(
+        context,
+        checkResult.downloadUrl!,
+      );
+      if (!context.mounted) return;
+
+      if (!downloadResult.success &&
+          downloadResult.type != UpdateResultType.userCancelled &&
+          downloadResult.message != null) {
+        final localizedError =
+            _localizeUpdateMessage(context, downloadResult.message!);
+        await UpdateDialogs.showDownloadErrorWithFallback(
+          context,
+          localizedError.isNotEmpty
+              ? localizedError
+              : downloadResult.message!,
+        );
+      }
+    } catch (e) {
+      logger.warning('UpdateService', '启动时自动检查更新失败', e);
+    }
+  }
 
   /// 检查更新信息
   static Future<UpdateResult> checkUpdate() async {
