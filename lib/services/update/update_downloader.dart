@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
+import '../../config/github_config.dart';
 import '../system/logger_service.dart';
 import '../../l10n/app_localizations.dart';
 import 'update_result.dart';
@@ -148,7 +149,7 @@ class UpdateDownloader {
             'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
             'Cache-Control': 'no-cache',
             'Pragma': 'no-cache',
-            'Referer': 'https://github.com/TNT-Likely/BeeCount/releases',
+            'Referer': GitHubConfig.releasesUrl,
           },
         ),
         onReceiveProgress: (received, total) {
