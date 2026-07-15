@@ -3159,5 +3159,14 @@
   "currencyLSL": "莱索托洛蒂",
   "currencySZL": "斯威士兰里兰吉尼",
   "currencyMGA": "马达加斯加阿里亚里",
-  "currencyMRU": "毛里塔尼亚乌吉亚"
+  "currencyMRU": "毛里塔尼亚乌吉亚",
+  "updateAvailableBanner": "发现新版本 {version}",
+  "@updateAvailableBanner": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "updateAvailableAction": "更新"
 }

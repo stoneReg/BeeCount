@@ -13879,6 +13879,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Mauritanian Ouguiya'**
   String get currencyMRU;
+
+  /// No description provided for @updateAvailableBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'New version {version} available'**
+  String updateAvailableBanner(String version);
+
+  /// No description provided for @updateAvailableAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Update'**
+  String get updateAvailableAction;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

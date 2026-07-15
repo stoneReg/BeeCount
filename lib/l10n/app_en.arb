@@ -3218,5 +3218,14 @@
   "currencyLSL": "Basotho Loti",
   "currencySZL": "Swazi Lilangeni",
   "currencyMGA": "Malagasy Ariary",
-  "currencyMRU": "Mauritanian Ouguiya"
+  "currencyMRU": "Mauritanian Ouguiya",
+  "updateAvailableBanner": "New version {version} available",
+  "@updateAvailableBanner": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "updateAvailableAction": "Update"
 }
