@@ -2,17 +2,13 @@
 <resources>
     <!-- Theme applied to the Android Window while the process is starting when the OS's Dark Mode setting is off -->
     <style name="LaunchTheme" parent="@android:style/Theme.Light.NoTitleBar">
-        <!-- Show a splash screen on the activity. Automatically removed when
-             the Flutter engine draws its first frame -->
+        <!-- 仅进程启动到 Flutter 首帧前可见；首帧后主界面应立刻出现，不再长期停在 SplashPage -->
         <item name="android:windowBackground">@drawable/launch_background</item>
         <item name="android:statusBarColor">@color/splash_background</item>
         <item name="android:navigationBarColor">@color/splash_background</item>
     </style>
-    <!-- Theme applied to the Android Window as soon as the process has started.
-         与 LaunchTheme / SplashPage 同色，避免引擎附着后再闪白底。 -->
+    <!-- 引擎附着后到 Flutter 绘制首帧之间 / 窗口露底色：用中性底，避免金色 logo 闪屏在主界面后仍「粘」住 -->
     <style name="NormalTheme" parent="@android:style/Theme.Light.NoTitleBar">
-        <item name="android:windowBackground">@color/splash_background</item>
-        <item name="android:statusBarColor">@color/splash_background</item>
-        <item name="android:navigationBarColor">@color/splash_background</item>
+        <item name="android:windowBackground">@android:color/white</item>
     </style>
 </resources>
