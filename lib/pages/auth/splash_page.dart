@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../l10n/app_localizations.dart';
+import '../../theme.dart';
 
 class SplashPage extends ConsumerWidget {
   const SplashPage({super.key});
@@ -8,7 +9,9 @@ class SplashPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final primaryColor = theme.primaryColor;
+    // 固定蜂蜜金，与 Android LaunchTheme / launch_background 对齐，
+    // 避免主题色异步加载前后闪色，也与冷启动白屏修复一致。
+    const primaryColor = BeeTheme.honeyGold;
     
     return Scaffold(
       backgroundColor: primaryColor,

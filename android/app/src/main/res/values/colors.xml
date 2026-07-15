@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="ic_launcher_background">#FFFFFF</color>
+    <!-- 与 Flutter BeeTheme.honeyGold / SplashPage 对齐，避免冷启动白屏闪一下 -->
+    <color name="splash_background">#F8C91C</color>
 </resources>

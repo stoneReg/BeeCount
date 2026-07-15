@@ -196,8 +196,9 @@ class UpdateService {
       final uri = Uri.parse(downloadUrl);
       final originalFileName = uri.pathSegments.last;
       String? version;
-      final versionMatch = RegExp(r'beecount-([0-9]+\.[0-9]+\.[0-9]+)\.apk')
-          .firstMatch(originalFileName);
+      final versionMatch = RegExp(
+              r'beecount-v?([0-9]+\.[0-9]+\.[0-9]+)',
+            ).firstMatch(originalFileName);
       if (versionMatch != null) {
         version = versionMatch.group(1);
         logger.info('UpdateService', '从URL提取的版本号: $version');
