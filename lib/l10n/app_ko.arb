@@ -2159,5 +2159,14 @@
   "txFlagExcludeFromStatsHint": "통계에서는 제외되지만 잔액에는 계속 반영됩니다",
   "txFlagExcludeFromBudgetHint": "예산에는 반영되지 않습니다",
   "txFlagExcludedTag": "제외됨",
-  "txFlagBudgetExcludedTag": "예산 제외"
+  "txFlagBudgetExcludedTag": "예산 제외",
+  "updateAvailableBanner": "새 버전 {version} 이용 가능",
+  "@updateAvailableBanner": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "updateAvailableAction": "업데이트"
 }

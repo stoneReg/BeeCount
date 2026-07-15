@@ -7318,4 +7318,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get currencyMRU => 'Mauritanian Ouguiya';
+
+  @override
+  String updateAvailableBanner(String version) {
+    return 'New version $version available';
+  }
+
+  @override
+  String get updateAvailableAction => 'Update';
 }

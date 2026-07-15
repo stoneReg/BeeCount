@@ -104,7 +104,8 @@ class _BeeAppState extends ConsumerState<BeeApp>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _setupAppLinkListener();
       _setupQuickActions();
-      UpdateService.scheduleStartupUpdateCheck(context);
+      // #390：静默检查，有新版本时通过首页横幅轻量提示（非启动弹窗）
+      UpdateService.scheduleStartupUpdateCheck(ProviderScope.containerOf(context));
     });
   }
 

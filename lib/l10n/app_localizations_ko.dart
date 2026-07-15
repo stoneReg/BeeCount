@@ -7318,4 +7318,12 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get currencyMRU => 'Mauritanian Ouguiya';
+
+  @override
+  String updateAvailableBanner(String version) {
+    return '새 버전 $version 이용 가능';
+  }
+
+  @override
+  String get updateAvailableAction => '업데이트';
 }
