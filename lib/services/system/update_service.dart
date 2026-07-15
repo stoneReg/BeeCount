@@ -1,8 +1,13 @@
+import 'dart:async';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'logger_service.dart';
 import '../../widgets/ui/ui.dart';
 import '../../l10n/app_localizations.dart';
+import '../../providers/update_providers.dart';
 
 // 导入分离的模块
 import '../update/update_result.dart';
@@ -58,6 +63,105 @@ String _localizeUpdateMessage(BuildContext context, String? message) {
 
 class UpdateService {
   UpdateService._();
+
+  /// SharedPreferences：用户对本版本关闭过轻量提示后不再弹出（见 issue #390）。
+  static const String dismissedVersionPrefsKey =
+      'update_prompt_dismissed_version';
+
+  static bool _startupUpdateCheckDone = false;
+
+  /// 是否允许启动时自动检查更新（Android 非 Play 发行包）。
+  static bool get supportsAutoUpdatePrompt {
+    if (!Platform.isAndroid) return false;
+    if (kDebugMode) return false;
+    if (const bool.fromEnvironment('GOOGLE_PLAY', defaultValue: false)) {
+      return false;
+    }
+    return true;
+  }
+
+  /// 用户关闭横幅后，同一版本不再提示；发布更新的版本后会再次显示。
+  static bool shouldPromptForVersion({
+    required String availableVersion,
+    required String? dismissedVersion,
+  }) {
+    if (availableVersion.isEmpty) return false;
+    return dismissedVersion != availableVersion;
+  }
+
+  /// 读取已关闭提示的版本号。
+  static Future<String?> getDismissedVersion() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(dismissedVersionPrefsKey);
+  }
+
+  /// 将指定版本记为「不再提示」。
+  static Future<void> dismissVersion(String version) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(dismissedVersionPrefsKey, version);
+  }
+
+  /// 应用启动后静默检查更新：有新版本且用户未对本版本关闭提示时，
+  /// 写入 [availableUpdateProvider]，由首页横幅轻量提示（#390）。
+  ///
+  /// 使用 [ProviderContainer] 而非 Widget [BuildContext]，避免 await 后
+  /// widget 已 dispose 导致无法安全写 Provider。
+  static void scheduleStartupUpdateCheck(ProviderContainer container) {
+    if (_startupUpdateCheckDone) return;
+    if (!supportsAutoUpdatePrompt) return;
+
+    _startupUpdateCheckDone = true;
+    unawaited(_runSilentStartupCheck(container));
+  }
+
+  /// 启动时静默检查；无更新 / 网络异常均不打扰用户。
+  static Future<void> _runSilentStartupCheck(ProviderContainer container) async {
+    try {
+      // 稍延迟，让首页先完成首屏渲染
+      await Future.delayed(const Duration(milliseconds: 800));
+
+      logger.info('UpdateService', '启动时自动检查更新...');
+      final checkResult = await checkUpdate();
+      if (!checkResult.hasUpdate) return;
+
+      final version = checkResult.version;
+      final downloadUrl = checkResult.downloadUrl;
+      if (version == null ||
+          version.isEmpty ||
+          downloadUrl == null ||
+          downloadUrl.isEmpty) {
+        return;
+      }
+
+      final dismissed = await getDismissedVersion();
+      if (!shouldPromptForVersion(
+        availableVersion: version,
+        dismissedVersion: dismissed,
+      )) {
+        logger.info('UpdateService', '用户已关闭版本 $version 的更新提示，跳过');
+        return;
+      }
+
+      container.read(availableUpdateProvider.notifier).state = AvailableUpdate(
+        version: version,
+        downloadUrl: downloadUrl,
+        releaseNotes: checkResult.releaseNotes ?? '',
+      );
+      logger.info('UpdateService', '发现可升级版本 $version，已推送到首页提示');
+    } catch (e) {
+      // 网络异常等：静默失败，不弹窗
+      logger.warning('UpdateService', '启动时自动检查更新失败', e);
+    }
+  }
+
+  /// 关闭指定版本的轻量提示（横幅 X），并清除 Provider 状态。
+  static Future<void> dismissAvailableUpdate(
+    WidgetRef ref,
+    AvailableUpdate update,
+  ) async {
+    await dismissVersion(update.version);
+    ref.read(availableUpdateProvider.notifier).state = null;
+  }
 
   /// 检查更新信息
   static Future<UpdateResult> checkUpdate() async {

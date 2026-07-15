@@ -7542,6 +7542,14 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get currencyMRU => '毛里塔尼亚乌吉亚';
+
+  @override
+  String updateAvailableBanner(String version) {
+    return '发现新版本 $version';
+  }
+
+  @override
+  String get updateAvailableAction => '更新';
 }
 
 /// The translations for Chinese, as used in Taiwan (`zh_TW`).
@@ -15084,4 +15092,12 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get currencyMRU => '毛里塔尼亞烏吉亞';
+
+  @override
+  String updateAvailableBanner(String version) {
+    return '發現新版本 $version';
+  }
+
+  @override
+  String get updateAvailableAction => '更新';
 }
