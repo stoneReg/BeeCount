@@ -1,6 +1,10 @@
 import 'dart:async';
+import 'dart:io';
+
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+
 import '../../config/github_config.dart';
 import '../system/logger_service.dart';
 import 'update_result.dart';
@@ -145,7 +149,18 @@ class UpdateChecker {
           // armeabi-v7a / x86_64 / universal),需要按设备选择,否则 arm64 真机
           // 装到 armv7 包会走系统 32-bit 兼容层导致严重卡顿
           final assets = data['assets'] as List;
-          final apkUrl = _pickApkUrl(assets, latestVersion);
+          final abis = await _deviceSupportedAbis();
+          final rawTag = (data['tag_name'] ?? '').toString();
+          final apkUrl = pickApkUrl(
+            assets,
+            latestVersion,
+            supportedAbis: abis,
+            rawTagName: rawTag,
+          );
+          logger.info(
+            'UpdateChecker',
+            '设备 ABI=$abis, tag=$rawTag, 选用=${apkUrl ?? "无"}',
+          );
 
           if (apkUrl != null) {
             return UpdateResult(
@@ -185,38 +200,112 @@ class UpdateChecker {
     }
   }
 
+  /// 读取本机支持的 ABI 列表（arm64 真机常见 `['arm64-v8a','armeabi-v7a',...]`）。
+  static Future<List<String>> _deviceSupportedAbis() async {
+    if (!Platform.isAndroid) return const ['arm64-v8a'];
+    try {
+      final info = await DeviceInfoPlugin().androidInfo;
+      if (info.supportedAbis.isNotEmpty) {
+        return List<String>.from(info.supportedAbis);
+      }
+    } catch (e) {
+      logger.warning('UpdateChecker', '读取设备 ABI 失败，默认 arm64', e);
+    }
+    // 现代真机绝大多数为 arm64；无法探测时宁可选 64 位也不要误选 32 位
+    return const ['arm64-v8a'];
+  }
+
   /// 从 GitHub Release assets 列表里挑出适配当前设备的 APK。
   ///
   /// v3.2.1 起 Release 含多个按 ABI 拆分的 APK:
-  ///   - beecount-<ver>.apk             主分发(arm64-v8a,99% 现役真机)
-  ///   - beecount-<ver>-armeabi-v7a.apk armv7 老 32-bit 设备
-  ///   - beecount-<ver>-x86_64.apk      Intel/Win/Linux 模拟器
-  ///   - beecount-<ver>-universal.apk   三 ABI 全打,兜底
+  ///   - beecount-VER.apk / beecount-vVER.apk  主分发(arm64-v8a)
+  ///   - beecount-VER-armeabi-v7a.apk            armv7 老 32-bit 设备
+  ///   - beecount-VER-x86_64.apk                 模拟器
+  ///   - beecount-VER-universal.apk              多 ABI 兜底
   ///
-  /// 历史 bug:之前 `endsWith('.apk') break` 取第一个,因 GitHub assets 按
-  /// 字母序排列,第一个就是 `-armeabi-v7a.apk` — arm64 真机装上跑 32-bit 兼容
-  /// 模式 CPU 指令集降级 + 寄存器宽度从 64bit 切 32bit,体感严重卡顿。
+  /// 历史 bug:
+  /// 1) 取 assets 字母序第一个 → armeabi-v7a 包，arm64 真机跑 32-bit 兼容层严重卡顿
+  /// 2) tag 带 `v` 前缀时 CI 产出 `beecount-v4.0.1.apk`，仅匹配去 v 的名字会 miss，
+  ///    再回退到 `values.first` 仍装上 32 位包（stoneReg v4.0.1 已复现）
   ///
-  /// 选择策略(按优先级):
-  ///   1. `beecount-<ver>.apk` 主包(arm64)— 现役真机 99% 是 arm64
-  ///   2. universal — 主包不存在时兜底
-  ///   3. 任何 .apk — 都没有时取第一个
-  static String? _pickApkUrl(List assets, String version) {
+  /// [normalizedVersion] 应为去掉 `v` 的版本（如 `4.0.1`）；[rawTagName] 保留原始 tag。
+  static String? pickApkUrl(
+    List assets,
+    String normalizedVersion, {
+    required List<String> supportedAbis,
+    String? rawTagName,
+  }) {
     final apkByName = <String, String>{};
     for (final asset in assets) {
       final name = asset['name'].toString();
+      // 只要 .apk；排除 .aab 等
       if (name.endsWith('.apk')) {
-        apkByName[name] = asset['browser_download_url'];
+        apkByName[name] = asset['browser_download_url'].toString();
       }
     }
     if (apkByName.isEmpty) return null;
 
-    final mainPkgName = 'beecount-$version.apk';
-    final universalName = 'beecount-$version-universal.apk';
+    final versionKeys = <String>{
+      normalizedVersion,
+      'v$normalizedVersion',
+      if (rawTagName != null && rawTagName.isNotEmpty) rawTagName,
+    };
 
-    if (apkByName.containsKey(mainPkgName)) return apkByName[mainPkgName];
-    if (apkByName.containsKey(universalName)) return apkByName[universalName];
-    return apkByName.values.first;
+    List<String> namesFor(String abiSuffix) {
+      // abiSuffix: '' | '-arm64-v8a' | '-armeabi-v7a' | '-x86_64' | '-universal'
+      return [
+        for (final v in versionKeys) 'beecount-$v$abiSuffix.apk',
+      ];
+    }
+
+    String? firstHit(Iterable<String> names) {
+      for (final name in names) {
+        final url = apkByName[name];
+        if (url != null) return url;
+      }
+      return null;
+    }
+
+    final abis =
+        supportedAbis.map((e) => e.toLowerCase()).toList(growable: false);
+    final hasArm64 = abis.any((a) => a.contains('arm64'));
+    final hasX64 = abis.any((a) => a == 'x86_64' || a == 'x86-64');
+    final onlyArmv7 = !hasArm64 &&
+        !hasX64 &&
+        abis.any((a) => a.contains('armeabi'));
+
+    if (hasArm64) {
+      return firstHit([
+        ...namesFor(''),
+        ...namesFor('-arm64-v8a'),
+        ...namesFor('-universal'),
+        // 绝不回退到 armeabi-v7a
+      ]);
+    }
+
+    if (hasX64) {
+      return firstHit([
+        ...namesFor('-x86_64'),
+        ...namesFor('-universal'),
+        ...namesFor(''),
+      ]);
+    }
+
+    if (onlyArmv7) {
+      return firstHit([
+        ...namesFor('-armeabi-v7a'),
+        ...namesFor('-universal'),
+      ]);
+    }
+
+    // 未知 ABI：优先 64 位主包 / universal，armeabi 放最后
+    return firstHit([
+      ...namesFor(''),
+      ...namesFor('-arm64-v8a'),
+      ...namesFor('-universal'),
+      ...namesFor('-x86_64'),
+      ...namesFor('-armeabi-v7a'),
+    ]);
   }
 
   // 辅助方法
