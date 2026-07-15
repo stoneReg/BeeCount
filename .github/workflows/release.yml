@@ -354,7 +354,8 @@ jobs:
     name: iOS (app.zip + unsigned .ipa)
     runs-on: macos-latest
     needs: [check-branch]
-    if: always() && (needs.check-branch.result == 'success' || github.event_name == 'push')
+    # 暂时屏蔽 iOS 打包与发布，Release 只保留 Android APK/AAB
+    if: false
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -765,8 +766,9 @@ jobs:
     needs:
       - check-branch
       - android
-      - ios
-    if: always() && (needs.check-branch.result == 'success' || github.event_name == 'push') && needs.android.result == 'success' && needs.ios.result == 'success'
+      # ios 暂时屏蔽，不依赖
+    # 仅要求 Android 成功（iOS job 已 if:false）
+    if: always() && (needs.check-branch.result == 'success' || github.event_name == 'push') && needs.android.result == 'success'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -834,11 +836,7 @@ jobs:
           echo "== dist tree =="
           ls -R ./dist || true
 
-      - name: Download iOS artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: ios
-          path: ./dist/ios
+      # iOS 暂时不打包，跳过下载 iOS artifacts
 
       - name: Generate release notes
         id: notes
@@ -884,7 +882,6 @@ jobs:
           files: |
             dist/android/**/*.apk
             dist/android/**/*.aab
-            dist/ios/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
