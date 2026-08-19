@@ -279,7 +279,7 @@ void main() {
       ),
       'QuickAddView.small': QuickAddView(
         size: HWSize.small, categories: quickAdd, themeColor: honey,
-        dark: false, addLabel: '+', width: 155, height: 155,
+        dark: false, voiceLabel: '+', width: 155, height: 155,
       ),
       'BudgetView.medium': BudgetView(
         size: HWSize.medium,

@@ -656,6 +656,44 @@ class BeeCountCloudProvider implements CloudProvider {
     return storage.readTags(ledgerId: ledgerId);
   }
 
+  /// 单笔账单修改记录(`/read/ledgers/{id}/transactions/{syncId}/history`)。
+  Future<BeeCountCloudAuditPage> readTransactionHistory({
+    required String ledgerId,
+    required String transactionSyncId,
+    int limit = 50,
+    int? beforeId,
+  }) async {
+    final storage = _storage;
+    if (storage == null) {
+      throw CloudConfigurationException(
+          'BeeCount Cloud storage is not initialized.');
+    }
+    return storage.readTransactionHistory(
+      ledgerId: ledgerId,
+      transactionSyncId: transactionSyncId,
+      limit: limit,
+      beforeId: beforeId,
+    );
+  }
+
+  /// 最近修改记录(`/read/audit/recent`)。
+  Future<BeeCountCloudAuditPage> readAuditRecent({
+    String? ledgerId,
+    int limit = 50,
+    int? beforeId,
+  }) async {
+    final storage = _storage;
+    if (storage == null) {
+      throw CloudConfigurationException(
+          'BeeCount Cloud storage is not initialized.');
+    }
+    return storage.readAuditRecent(
+      ledgerId: ledgerId,
+      limit: limit,
+      beforeId: beforeId,
+    );
+  }
+
   Future<BeeCountCloudWriteCommitMeta> writeCreateLedger({
     String? ledgerId,
     required String ledgerName,
@@ -2816,6 +2854,52 @@ class BeeCountCloudStorageService implements CloudStorageService {
     return out;
   }
 
+  Future<BeeCountCloudAuditPage> readTransactionHistory({
+    required String ledgerId,
+    required String transactionSyncId,
+    int limit = 50,
+    int? beforeId,
+  }) async {
+    final qp = <String, String>{
+      'limit': '$limit',
+      if (beforeId != null) 'before_id': '$beforeId',
+    };
+    final response = await _authedRequest(
+      method: 'GET',
+      path:
+          '/read/ledgers/$ledgerId/transactions/$transactionSyncId/history',
+      query: qp,
+    );
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw CloudStorageException(
+          'Read transaction history failed: ${_extractErrorMessage(response)}');
+    }
+    return BeeCountCloudAuditPage.fromJson(_decodeJsonObject(response.body));
+  }
+
+  Future<BeeCountCloudAuditPage> readAuditRecent({
+    String? ledgerId,
+    int limit = 50,
+    int? beforeId,
+  }) async {
+    final qp = <String, String>{
+      'limit': '$limit',
+      if (ledgerId != null && ledgerId.trim().isNotEmpty)
+        'ledger_id': ledgerId.trim(),
+      if (beforeId != null) 'before_id': '$beforeId',
+    };
+    final response = await _authedRequest(
+      method: 'GET',
+      path: '/read/audit/recent',
+      query: qp,
+    );
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw CloudStorageException(
+          'Read audit recent failed: ${_extractErrorMessage(response)}');
+    }
+    return BeeCountCloudAuditPage.fromJson(_decodeJsonObject(response.body));
+  }
+
   Future<BeeCountCloudWriteCommitMeta> writeCreateLedger({
     String? ledgerId,
     required String ledgerName,
@@ -4727,6 +4811,122 @@ class BeeCountCloudMemberStats {
       startAt: parseDate('start_at'),
       endAt: parseDate('end_at'),
       items: items,
+    );
+  }
+}
+
+class BeeCountCloudAuditFieldChange {
+  const BeeCountCloudAuditFieldChange({
+    required this.field,
+    required this.label,
+    this.fromValue,
+    this.toValue,
+  });
+
+  final String field;
+  final String label;
+  final Object? fromValue;
+  final Object? toValue;
+
+  factory BeeCountCloudAuditFieldChange.fromJson(Map<String, dynamic> json) {
+    return BeeCountCloudAuditFieldChange(
+      field: (json['field'] as String?)?.trim() ?? '',
+      label: (json['label'] as String?)?.trim() ?? '',
+      fromValue: json['from_value'],
+      toValue: json['to_value'],
+    );
+  }
+}
+
+class BeeCountCloudAuditEntry {
+  const BeeCountCloudAuditEntry({
+    required this.id,
+    required this.entitySyncId,
+    required this.action,
+    required this.updatedAt,
+    this.changeId,
+    this.ledgerId,
+    this.ledgerName,
+    this.updatedByDeviceId,
+    this.deviceName,
+    this.updatedByUserId,
+    this.userDisplayName,
+    this.userEmail,
+    this.changes = const [],
+    this.payload = const {},
+  });
+
+  final int id;
+  final int? changeId;
+  final String? ledgerId;
+  final String? ledgerName;
+  final String entitySyncId;
+  final String action;
+  final DateTime updatedAt;
+  final String? updatedByDeviceId;
+  final String? deviceName;
+  final String? updatedByUserId;
+  final String? userDisplayName;
+  final String? userEmail;
+  final List<BeeCountCloudAuditFieldChange> changes;
+  final Map<String, dynamic> payload;
+
+  factory BeeCountCloudAuditEntry.fromJson(Map<String, dynamic> json) {
+    final rawChanges = json['changes'];
+    final changes = <BeeCountCloudAuditFieldChange>[];
+    if (rawChanges is List) {
+      for (final row in rawChanges) {
+        if (row is Map<String, dynamic>) {
+          changes.add(BeeCountCloudAuditFieldChange.fromJson(row));
+        }
+      }
+    }
+    final rawPayload = json['payload'];
+    return BeeCountCloudAuditEntry(
+      id: json['id'] as int? ?? 0,
+      changeId: json['change_id'] as int?,
+      ledgerId: json['ledger_id'] as String?,
+      ledgerName: json['ledger_name'] as String?,
+      entitySyncId: (json['entity_sync_id'] as String?)?.trim() ?? '',
+      action: (json['action'] as String?)?.trim() ?? 'update',
+      updatedAt: DateTime.tryParse(json['updated_at'] as String? ?? '')?.toLocal() ??
+          DateTime.now(),
+      updatedByDeviceId: json['updated_by_device_id'] as String?,
+      deviceName: json['device_name'] as String?,
+      updatedByUserId: json['updated_by_user_id'] as String?,
+      userDisplayName: json['user_display_name'] as String?,
+      userEmail: json['user_email'] as String?,
+      changes: changes,
+      payload: rawPayload is Map<String, dynamic> ? rawPayload : const {},
+    );
+  }
+}
+
+class BeeCountCloudAuditPage {
+  const BeeCountCloudAuditPage({
+    required this.items,
+    this.hasMore = false,
+    this.nextBeforeId,
+  });
+
+  final List<BeeCountCloudAuditEntry> items;
+  final bool hasMore;
+  final int? nextBeforeId;
+
+  factory BeeCountCloudAuditPage.fromJson(Map<String, dynamic> json) {
+    final rawItems = json['items'];
+    final items = <BeeCountCloudAuditEntry>[];
+    if (rawItems is List) {
+      for (final row in rawItems) {
+        if (row is Map<String, dynamic>) {
+          items.add(BeeCountCloudAuditEntry.fromJson(row));
+        }
+      }
+    }
+    return BeeCountCloudAuditPage(
+      items: items,
+      hasMore: json['has_more'] == true,
+      nextBeforeId: json['next_before_id'] as int?,
     );
   }
 }

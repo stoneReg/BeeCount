@@ -78,7 +78,8 @@ class _Pack {
   // netWorth
   final String netWorthLabel, totalAssetsLabel, totalLiabilitiesLabel;
   // quickAdd / budget / recent / dashboard
-  final String addLabel;
+  final String voiceLabel;
+  final String manualLabel;
   final String budgetLabel, usedLabel, totalLabel, remainingLabel;
   final String recentLabel;
   /// 餐饮/交通/购物/娱乐/医疗/居家/通讯 顺序;前 4 个给 glance/recent/
@@ -104,7 +105,8 @@ class _Pack {
     required this.netWorthLabel,
     required this.totalAssetsLabel,
     required this.totalLiabilitiesLabel,
-    required this.addLabel,
+    required this.voiceLabel,
+    required this.manualLabel,
     required this.budgetLabel,
     required this.usedLabel,
     required this.totalLabel,
@@ -134,7 +136,8 @@ const _zh = _Pack(
   netWorthLabel: '净资产',
   totalAssetsLabel: '总资产',
   totalLiabilitiesLabel: '总负债',
-  addLabel: '记一笔',
+  voiceLabel: '语音',
+  manualLabel: '记一笔',
   budgetLabel: '本月预算',
   usedLabel: '已用',
   totalLabel: '总额',
@@ -163,7 +166,8 @@ const _en = _Pack(
   netWorthLabel: 'Net Assets', // accountTotalBalance
   totalAssetsLabel: 'Total Assets', // totalAssets
   totalLiabilitiesLabel: 'Total Liabilities', // totalLiabilities
-  addLabel: 'Add', // widgetQuickAddLabel
+  voiceLabel: 'Voice', // fabActionVoice
+  manualLabel: 'Add', // widgetQuickAddLabel
   budgetLabel: 'Monthly Budget', // budgetMonthlyBudget
   usedLabel: 'Used', // budgetUsed
   totalLabel: 'Total', // widgetBudgetTotal
@@ -523,7 +527,7 @@ Future<void> _generatePack(WidgetTester tester, _Pack p) async {
       categories: _quickAddCategories(p),
       themeColor: _honey,
       dark: false,
-      addLabel: p.addLabel,
+      voiceLabel: p.voiceLabel,
       titleLabel: p.quickAddTitleLabel,
       width: 155,
       height: 155,
@@ -541,7 +545,7 @@ Future<void> _generatePack(WidgetTester tester, _Pack p) async {
       categories: _quickAddCategories(p),
       themeColor: _honey,
       dark: false,
-      addLabel: p.addLabel,
+      voiceLabel: p.voiceLabel,
       titleLabel: p.quickAddTitleLabel,
       width: 364,
       height: 169,
@@ -693,7 +697,8 @@ Future<void> _generatePack(WidgetTester tester, _Pack p) async {
       monthExpenseLabel: p.monthExpenseLabel,
       monthIncomeLabel: p.monthIncomeLabel,
       recentLabel: p.recentLabel,
-      quickAddLabel: p.addLabel,
+      voiceLabel: p.voiceLabel,
+      manualLabel: p.manualLabel,
       titleLabel: p.dashboardTitleLabel,
       width: 364,
       height: 382,

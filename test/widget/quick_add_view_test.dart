@@ -45,7 +45,7 @@ void main() {
           categories: sampleCategories(5),
           themeColor: const Color(0xFFF5A623),
           dark: false,
-          addLabel: '记一笔',
+          voiceLabel: '语音',
           width: size.width,
           height: size.height,
         ),
@@ -54,7 +54,7 @@ void main() {
       await tester.pump();
 
       expect(tester.takeException(), isNull);
-      expect(find.text('记一笔'), findsOneWidget);
+      expect(find.text('语音'), findsOneWidget);
       expect(find.text('餐饮'), findsOneWidget);
     });
 
@@ -66,7 +66,7 @@ void main() {
           categories: const [],
           themeColor: const Color(0xFFF5A623),
           dark: true,
-          addLabel: '记一笔',
+          voiceLabel: '语音',
           width: size.width,
           height: size.height,
         ),
@@ -75,7 +75,7 @@ void main() {
       await tester.pump();
 
       expect(tester.takeException(), isNull);
-      expect(find.text('记一笔'), findsOneWidget);
+      expect(find.text('语音'), findsOneWidget);
       expect(find.byIcon(Icons.more_horiz), findsNWidgets(3));
     });
 
@@ -89,7 +89,7 @@ void main() {
           ],
           themeColor: const Color(0xFFF5A623),
           dark: false,
-          addLabel: '记一笔',
+          voiceLabel: '语音',
           width: size.width,
           height: size.height,
         ),
@@ -112,7 +112,7 @@ void main() {
           ],
           themeColor: const Color(0xFFF5A623),
           dark: false,
-          addLabel: '记一笔',
+          voiceLabel: '语音',
           width: size.width,
           height: size.height,
         ),
@@ -141,7 +141,7 @@ void main() {
           categories: sampleCategories(7),
           themeColor: const Color(0xFFF5A623),
           dark: false,
-          addLabel: '记一笔',
+          voiceLabel: '语音',
           width: size.width,
           height: size.height,
         ),
@@ -150,7 +150,7 @@ void main() {
       await tester.pump();
 
       expect(tester.takeException(), isNull);
-      expect(find.text('记一笔'), findsOneWidget);
+      expect(find.text('语音'), findsOneWidget);
       // 7 个分类全部上墙(旧版单行只放得下 4 个),且没有占位格。
       for (final name in ['餐饮', '交通', '购物', '娱乐', '医疗', '住房', '通讯']) {
         expect(find.text(name), findsOneWidget);
@@ -166,7 +166,7 @@ void main() {
           categories: sampleCategories(9),
           themeColor: const Color(0xFFF5A623),
           dark: true,
-          addLabel: '记一笔',
+          voiceLabel: '语音',
           width: size.width,
           height: size.height,
         ),
@@ -188,7 +188,7 @@ void main() {
           categories: const [],
           themeColor: const Color(0xFFF5A623),
           dark: false,
-          addLabel: '记一笔',
+          voiceLabel: '语音',
           width: size.width,
           height: size.height,
         ),
@@ -197,7 +197,7 @@ void main() {
       await tester.pump();
 
       expect(tester.takeException(), isNull);
-      expect(find.text('记一笔'), findsOneWidget);
+      expect(find.text('语音'), findsOneWidget);
       expect(find.byIcon(Icons.more_horiz), findsNWidgets(7));
     });
   });

@@ -68,12 +68,19 @@ class BeeCountDashboardWidgetProvider : HomeWidgetProvider() {
                         )
                         setOnClickPendingIntent(R.id.widget_click, detailPending)
 
-                        val expenseIntent = createLaunchIntentWithDeepLink(context, "beecount://new?type=expense")
-                        val expensePending = PendingIntent.getActivity(
-                            context, widgetId * 10 + 2, expenseIntent,
+                        val voiceIntent = createLaunchIntentWithDeepLink(context, "beecount://voice")
+                        val voicePending = PendingIntent.getActivity(
+                            context, widgetId * 10 + 2, voiceIntent,
                             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
                         )
-                        setOnClickPendingIntent(R.id.click_quick_add, expensePending)
+                        setOnClickPendingIntent(R.id.click_voice, voicePending)
+
+                        val manualIntent = createLaunchIntentWithDeepLink(context, "beecount://new?type=expense")
+                        val manualPending = PendingIntent.getActivity(
+                            context, widgetId * 10 + 3, manualIntent,
+                            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                        )
+                        setOnClickPendingIntent(R.id.click_manual, manualPending)
                         Log.d(TAG, "Set click handlers (detail + quick add)")
                     } catch (e: Exception) {
                         Log.e(TAG, "Failed to set click", e)

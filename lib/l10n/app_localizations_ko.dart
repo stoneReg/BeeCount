@@ -3495,6 +3495,33 @@ class AppLocalizationsKo extends AppLocalizations {
   String get cloudBeeCountCloudAttachmentHint => '영수증 이미지가 클라우드에 자동으로 백업됩니다';
 
   @override
+  String get txAuditTitle => 'Edit history';
+
+  @override
+  String get txAuditRecentSubtitle => 'View cloud transaction edit history';
+
+  @override
+  String get txAuditEmpty => 'No edit history yet';
+
+  @override
+  String get txAuditLoadFailed => 'Failed to load edit history';
+
+  @override
+  String get txAuditActionCreate => 'Created';
+
+  @override
+  String get txAuditActionUpdate => 'Updated';
+
+  @override
+  String get txAuditActionDelete => 'Deleted';
+
+  @override
+  String get txAuditViewHistory => 'Edit history';
+
+  @override
+  String get txAuditLoadMore => 'Load more';
+
+  @override
   String get cloudTabOffline => '오프라인';
 
   @override
