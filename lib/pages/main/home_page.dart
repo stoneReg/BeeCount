@@ -25,6 +25,7 @@ import '../../utils/month_range.dart';
 import '../../services/export/share_poster_service.dart';
 import '../report/annual_report_page.dart';
 import '../calendar/calendar_page.dart';
+import '../cloud/transaction_audit_page.dart';
 import '../../widgets/biz/ledger_picker_sheet.dart';
 import '../../widgets/biz/home_budget_summary.dart';
 import 'ledgers_page_new.dart';
@@ -1003,6 +1004,33 @@ class _HomePageState extends ConsumerState<HomePage> {
                           ),
                         ),
                         // 右侧操作按钮
+                        Consumer(
+                          builder: (context, ref, _) {
+                            final cloud =
+                                ref.watch(beecountCloudProviderInstance).valueOrNull;
+                            if (cloud == null) return const SizedBox.shrink();
+                            return IconButton(
+                              tooltip: AppLocalizations.of(context).txAuditViewHistory,
+                              padding: const EdgeInsets.all(8),
+                              style: IconButton.styleFrom(
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                minimumSize: Size.zero,
+                              ),
+                              onPressed: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => const TransactionAuditPage(),
+                                  ),
+                                );
+                              },
+                              icon: Icon(
+                                Icons.history,
+                                size: 20,
+                                color: Theme.of(context).iconTheme.color,
+                              ),
+                            );
+                          },
+                        ),
                         if (aiEnabled)
                           IconButton(
                             tooltip: AppLocalizations.of(context).aiChatTitle,

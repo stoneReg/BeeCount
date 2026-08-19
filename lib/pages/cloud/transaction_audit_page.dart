@@ -7,6 +7,7 @@ import '../../l10n/app_localizations.dart';
 import '../../providers.dart';
 import '../../styles/tokens.dart';
 import '../../widgets/ui/ui.dart';
+import 'audit_display_helper.dart';
 
 /// BeeCount Cloud 修改记录页:可按单笔账单或最近修改浏览。
 class TransactionAuditPage extends ConsumerStatefulWidget {
@@ -97,63 +98,6 @@ class _TransactionAuditPageState extends ConsumerState<TransactionAuditPage> {
     }
   }
 
-  String _actionLabel(AppLocalizations l10n, String action) {
-    switch (action) {
-      case 'create':
-        return l10n.txAuditActionCreate;
-      case 'delete':
-        return l10n.txAuditActionDelete;
-      default:
-        return l10n.txAuditActionUpdate;
-    }
-  }
-
-  String _actorLine(BeeCountCloudAuditEntry entry) {
-    final parts = <String>[];
-    if (entry.deviceName != null && entry.deviceName!.isNotEmpty) {
-      parts.add(entry.deviceName!);
-    } else if (entry.updatedByDeviceId != null &&
-        entry.updatedByDeviceId!.isNotEmpty) {
-      parts.add(entry.updatedByDeviceId!.substring(0, 8));
-    }
-    if (entry.userDisplayName != null && entry.userDisplayName!.isNotEmpty) {
-      parts.add(entry.userDisplayName!);
-    } else if (entry.userEmail != null && entry.userEmail!.isNotEmpty) {
-      parts.add(entry.userEmail!);
-    }
-    return parts.join(' · ');
-  }
-
-  Widget _changeBody(BeeCountCloudAuditEntry entry) {
-    if (entry.action == 'create') {
-      final amount = entry.payload['amount'];
-      final note = entry.payload['note'];
-      final parts = <String>[];
-      if (amount is num) parts.add('$amount');
-      if (note is String && note.isNotEmpty) parts.add(note);
-      return Text(
-        parts.isEmpty ? '—' : parts.join(' · '),
-        style: TextStyle(fontSize: 12, color: BeeTokens.textSecondary(context)),
-      );
-    }
-    if (entry.changes.isEmpty) {
-      return Text(
-        '—',
-        style: TextStyle(fontSize: 12, color: BeeTokens.textSecondary(context)),
-      );
-    }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        for (final c in entry.changes)
-          Text(
-            '${c.label}: ${c.fromValue ?? '—'} → ${c.toValue ?? '—'}',
-            style: TextStyle(fontSize: 12, color: BeeTokens.textSecondary(context)),
-          ),
-      ],
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -231,61 +175,193 @@ class _TransactionAuditPageState extends ConsumerState<TransactionAuditPage> {
                                   );
                                 }
                                 final entry = _items[index];
-                                return SectionCard(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(12),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Expanded(
-                                              child: Text(
-                                                _actionLabel(l10n, entry.action),
-                                                style: const TextStyle(
-                                                  fontWeight: FontWeight.w600,
-                                                ),
-                                              ),
-                                            ),
-                                            Text(
-                                              fmt.format(entry.updatedAt),
-                                              style: TextStyle(
-                                                fontSize: 11,
-                                                color: BeeTokens.textTertiary(context),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        if (entry.ledgerName != null &&
-                                            widget.transactionSyncId == null) ...[
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            entry.ledgerName!,
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: BeeTokens.textSecondary(context),
-                                            ),
-                                          ),
-                                        ],
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          _actorLine(entry).isEmpty ? '—' : _actorLine(entry),
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: BeeTokens.textSecondary(context),
-                                          ),
-                                        ),
-                                        const SizedBox(height: 6),
-                                        _changeBody(entry),
-                                      ],
-                                    ),
-                                  ),
+                                return _AuditEntryCard(
+                                  entry: entry,
+                                  l10n: l10n,
+                                  timeLabel: fmt.format(entry.updatedAt),
+                                  showLedger: widget.transactionSyncId == null,
                                 );
                               },
                             ),
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _AuditEntryCard extends StatelessWidget {
+  const _AuditEntryCard({
+    required this.entry,
+    required this.l10n,
+    required this.timeLabel,
+    required this.showLedger,
+  });
+
+  final BeeCountCloudAuditEntry entry;
+  final AppLocalizations l10n;
+  final String timeLabel;
+  final bool showLedger;
+
+  @override
+  Widget build(BuildContext context) {
+    final style = AuditDisplayHelper.actionStyle(context, entry.action);
+    final actionLabel = AuditDisplayHelper.actionLabel(l10n, entry.action);
+    final attribution = AuditDisplayHelper.attribution(entry);
+    final changes = AuditDisplayHelper.changeLines(entry);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Container(
+        decoration: BoxDecoration(
+          color: style.surface,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: style.border),
+        ),
+        padding: const EdgeInsets.all(14),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: style.accent.withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(style.icon, size: 18, color: style.accent),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              l10n.txAuditFieldType,
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: BeeTokens.textTertiary(context),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 4,
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 3,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: style.accent.withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    actionLabel,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: style.accent,
+                                    ),
+                                  ),
+                                ),
+                                if (showLedger &&
+                                    entry.ledgerName != null &&
+                                    entry.ledgerName!.isNotEmpty)
+                                  Text(
+                                    entry.ledgerName!,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: BeeTokens.textSecondary(context),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      Text(
+                        timeLabel,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: BeeTokens.textTertiary(context),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    l10n.txAuditFieldAttribution,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: BeeTokens.textTertiary(context),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    attribution,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: BeeTokens.textPrimary(context),
+                    ),
+                  ),
+                  if (changes.isNotEmpty) ...[
+                    const SizedBox(height: 10),
+                    Text(
+                      l10n.txAuditFieldChanges,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: BeeTokens.textTertiary(context),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    for (final line in changes)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 2),
+                        child: RichText(
+                          text: TextSpan(
+                            style: TextStyle(
+                              fontSize: 14,
+                              height: 1.35,
+                              color: BeeTokens.textPrimary(context),
+                            ),
+                            children: [
+                              TextSpan(
+                                text: '${line.label}：',
+                                style: TextStyle(
+                                  color: BeeTokens.textSecondary(context),
+                                ),
+                              ),
+                              TextSpan(text: line.text),
+                            ],
+                          ),
+                        ),
+                      ),
+                  ] else if (entry.action == 'delete') ...[
+                    const SizedBox(height: 10),
+                    Text(
+                      l10n.txAuditDeleteDetailMissing,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: BeeTokens.textSecondary(context),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

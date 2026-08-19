@@ -3507,13 +3507,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get txAuditLoadFailed => 'Failed to load edit history';
 
   @override
-  String get txAuditActionCreate => 'Created';
+  String get txAuditActionCreate => 'Record added';
 
   @override
-  String get txAuditActionUpdate => 'Updated';
+  String get txAuditActionUpdate => 'Record updated';
 
   @override
-  String get txAuditActionDelete => 'Deleted';
+  String get txAuditActionDelete => 'Record deleted';
+
+  @override
+  String get txAuditFieldType => 'Type';
+
+  @override
+  String get txAuditFieldAttribution => 'Source';
+
+  @override
+  String get txAuditFieldChanges => 'Changes';
+
+  @override
+  String get txAuditDeleteDetailMissing => '(Bill details were not kept for this historical delete)';
 
   @override
   String get txAuditViewHistory => 'Edit history';

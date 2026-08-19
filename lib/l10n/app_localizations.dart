@@ -6650,22 +6650,82 @@ abstract class AppLocalizations {
   /// **'Receipt images backed up to cloud automatically'**
   String get cloudBeeCountCloudAttachmentHint;
 
+  /// No description provided for @txAuditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit history'**
   String get txAuditTitle;
 
+  /// No description provided for @txAuditRecentSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'View cloud transaction edit history'**
   String get txAuditRecentSubtitle;
 
+  /// No description provided for @txAuditEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No edit history yet'**
   String get txAuditEmpty;
 
+  /// No description provided for @txAuditLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load edit history'**
   String get txAuditLoadFailed;
 
+  /// No description provided for @txAuditActionCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Record added'**
   String get txAuditActionCreate;
 
+  /// No description provided for @txAuditActionUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Record updated'**
   String get txAuditActionUpdate;
 
+  /// No description provided for @txAuditActionDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Record deleted'**
   String get txAuditActionDelete;
 
+  /// No description provided for @txAuditFieldType.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get txAuditFieldType;
+
+  /// No description provided for @txAuditFieldAttribution.
+  ///
+  /// In en, this message translates to:
+  /// **'Source'**
+  String get txAuditFieldAttribution;
+
+  /// No description provided for @txAuditFieldChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Changes'**
+  String get txAuditFieldChanges;
+
+  /// No description provided for @txAuditDeleteDetailMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'(Bill details were not kept for this historical delete)'**
+  String get txAuditDeleteDetailMissing;
+
+  /// No description provided for @txAuditViewHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit history'**
   String get txAuditViewHistory;
 
+  /// No description provided for @txAuditLoadMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Load more'**
   String get txAuditLoadMore;
 
   /// No description provided for @cloudTabOffline.

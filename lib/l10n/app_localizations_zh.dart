@@ -3507,13 +3507,25 @@ class AppLocalizationsZh extends AppLocalizations {
   String get txAuditLoadFailed => '加载修改记录失败';
 
   @override
-  String get txAuditActionCreate => '创建';
+  String get txAuditActionCreate => '新增记录';
 
   @override
-  String get txAuditActionUpdate => '修改';
+  String get txAuditActionUpdate => '修改记录';
 
   @override
-  String get txAuditActionDelete => '删除';
+  String get txAuditActionDelete => '删除记录';
+
+  @override
+  String get txAuditFieldType => '类型';
+
+  @override
+  String get txAuditFieldAttribution => '归属';
+
+  @override
+  String get txAuditFieldChanges => '修改内容';
+
+  @override
+  String get txAuditDeleteDetailMissing => '（历史删除记录未留存账单详情）';
 
   @override
   String get txAuditViewHistory => '修改记录';
@@ -11070,33 +11082,6 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get cloudBeeCountCloudAttachmentHint => '帳單圖片等附件自動雲端備份';
-
-  @override
-  String get txAuditTitle => '修改記錄';
-
-  @override
-  String get txAuditRecentSubtitle => '查看雲端帳單修改歷史';
-
-  @override
-  String get txAuditEmpty => '暫無修改記錄';
-
-  @override
-  String get txAuditLoadFailed => '載入修改記錄失敗';
-
-  @override
-  String get txAuditActionCreate => '建立';
-
-  @override
-  String get txAuditActionUpdate => '修改';
-
-  @override
-  String get txAuditActionDelete => '刪除';
-
-  @override
-  String get txAuditViewHistory => '修改記錄';
-
-  @override
-  String get txAuditLoadMore => '載入更多';
 
   @override
   String get cloudTabOffline => '離線模式';
