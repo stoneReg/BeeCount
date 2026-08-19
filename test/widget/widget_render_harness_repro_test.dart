@@ -278,8 +278,15 @@ void main() {
         width: 364, height: 382,
       ),
       'QuickAddView.small': QuickAddView(
-        size: HWSize.small, categories: quickAdd, themeColor: honey,
-        dark: false, voiceLabel: '+', width: 155, height: 155,
+        size: HWSize.small,
+        themeColor: honey,
+        dark: false,
+        voiceLabel: '语音',
+        aiLabel: 'AI',
+        cameraLabel: '拍照',
+        manualLabel: '记一笔',
+        width: 155,
+        height: 155,
       ),
       'BudgetView.medium': BudgetView(
         size: HWSize.medium,

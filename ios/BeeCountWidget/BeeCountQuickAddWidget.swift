@@ -2,8 +2,6 @@
 //  BeeCountQuickAddWidget.swift
 //  BeeCountWidget
 //
-//  Created by matrix on 2026/7/19.
-//
 
 import WidgetKit
 import SwiftUI
@@ -15,8 +13,6 @@ struct BeeCountQuickAddEntry: TimelineEntry {
 }
 
 struct BeeCountQuickAddProvider: TimelineProvider {
-    /// 按 widget family 选渲染管线写入的图片 key（对应
-    /// `lib/widget/widget_spec.dart` 的 `quickAddSmall/Medium`）。
     private func imageKey(for family: WidgetFamily) -> String {
         switch family {
         case .systemSmall:
@@ -24,12 +20,6 @@ struct BeeCountQuickAddProvider: TimelineProvider {
         default:
             return "widget_quickAdd_medium"
         }
-    }
-
-    private func categoryMetaKey(for family: WidgetFamily) -> String {
-        family == .systemSmall
-            ? "widget_quickAdd_categoryIds_small"
-            : "widget_quickAdd_categoryIds_medium"
     }
 
     func placeholder(in context: Context) -> BeeCountQuickAddEntry {
@@ -60,70 +50,32 @@ struct BeeCountQuickAddProvider: TimelineProvider {
     }
 }
 
-private func parseCategoryIds(metaKey: String) -> [Int] {
-    guard let raw = UserDefaults(suiteName: "group.com.tntlikely.beecount")?.string(forKey: metaKey),
-          let data = raw.data(using: .utf8),
-          let arr = try? JSONSerialization.jsonObject(with: data) as? [Int] else {
-        return []
-    }
-    return arr
-}
-
-private func expenseURL(categoryId: Int?) -> URL {
-    if let id = categoryId {
-        return URL(string: "beecount://new?type=expense&category=\(id)")!
-    }
-    return URL(string: "beecount://new?type=expense")!
-}
-
-private let voiceURL = URL(string: "beecount://voice")!
+private let quickAddActionURLs: [URL] = [
+    URL(string: "beecount://voice")!,
+    URL(string: "beecount://ai-chat")!,
+    URL(string: "beecount://camera")!,
+    URL(string: "beecount://new?type=expense")!,
+]
 
 struct BeeCountQuickAddWidgetEntryView : View {
     var entry: BeeCountQuickAddProvider.Entry
     @Environment(\.widgetFamily) var widgetFamily
 
     private var isSmall: Bool { widgetFamily == .systemSmall }
-    private var columns: Int { isSmall ? 2 : 4 }
-    private var cellCount: Int { isSmall ? 4 : 8 }
-    private var categorySlots: Int { cellCount - 1 }
 
     var body: some View {
         if let uiImage = UIImage(contentsOfFile: entry.widgetImagePath) {
             GeometryReader { geometry in
-                let metaKey = isSmall
-                    ? "widget_quickAdd_categoryIds_small"
-                    : "widget_quickAdd_categoryIds_medium"
-                let categoryIds = parseCategoryIds(metaKey: metaKey)
-
                 ZStack {
                     Image(uiImage: uiImage)
                         .resizable()
-                        .scaledToFill()
+                        .scaledToFit()
                         .frame(width: geometry.size.width, height: geometry.size.height)
-                        .clipped()
 
-                    // 透明点击层:跳过标题 ~18%,下方 2×2 / 2×4 网格(与 Android 对齐)
-                    VStack(spacing: 0) {
-                        Color.clear.frame(height: geometry.size.height * 0.18)
-                        ForEach(0..<2, id: \.self) { row in
-                            HStack(spacing: 0) {
-                                ForEach(0..<columns, id: \.self) { col in
-                                    let index = row * columns + col
-                                    if index < categorySlots {
-                                        Link(destination: expenseURL(categoryId: categoryIds.indices.contains(index) ? categoryIds[index] : nil)) {
-                                            Color.clear
-                                        }
-                                    } else if index == categorySlots {
-                                        Link(destination: voiceURL) {
-                                            Color.clear
-                                        }
-                                    } else {
-                                        Color.clear
-                                    }
-                                }
-                            }
-                            .frame(height: geometry.size.height * 0.41)
-                        }
+                    if isSmall {
+                        smallClickLayer(size: geometry.size)
+                    } else {
+                        mediumClickLayer(size: geometry.size)
                     }
                 }
             }
@@ -139,7 +91,39 @@ struct BeeCountQuickAddWidgetEntryView : View {
                         .foregroundColor(.white)
                 }
             }
-            .widgetURL(voiceURL)
+            .widgetURL(quickAddActionURLs[0])
+        }
+    }
+
+    @ViewBuilder
+    private func smallClickLayer(size: CGSize) -> some View {
+        VStack(spacing: 0) {
+            Color.clear.frame(height: size.height * 0.20)
+            HStack(spacing: 0) {
+                ForEach(0..<2, id: \.self) { col in
+                    Link(destination: quickAddActionURLs[col]) { Color.clear }
+                }
+            }
+            .frame(height: size.height * 0.40)
+            HStack(spacing: 0) {
+                ForEach(2..<4, id: \.self) { col in
+                    Link(destination: quickAddActionURLs[col]) { Color.clear }
+                }
+            }
+            .frame(height: size.height * 0.40)
+        }
+    }
+
+    @ViewBuilder
+    private func mediumClickLayer(size: CGSize) -> some View {
+        VStack(spacing: 0) {
+            Color.clear.frame(height: size.height * 0.22)
+            HStack(spacing: 0) {
+                ForEach(0..<4, id: \.self) { col in
+                    Link(destination: quickAddActionURLs[col]) { Color.clear }
+                }
+            }
+            .frame(height: size.height * 0.78)
         }
     }
 }
@@ -159,7 +143,7 @@ struct BeeCountQuickAddWidget: Widget {
             }
         }
         .configurationDisplayName("快速记账")
-        .description("常用分类一键速记 · 末格语音记账")
+        .description("语音 / AI / 拍照 / 记一笔")
         .supportedFamilies([.systemSmall, .systemMedium])
         .contentMarginsDisabled()
     }

@@ -3,10 +3,8 @@ package com.tntlikely.beecount
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.content.Context
-import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.BitmapFactory
-import android.net.Uri
 import android.util.Log
 import android.widget.RemoteViews
 import es.antonborri.home_widget.HomeWidgetProvider
@@ -61,21 +59,21 @@ class BeeCountDashboardWidgetProvider : HomeWidgetProvider() {
                     // 明细,点记一笔进了洞察页):上部主体 → 明细,底部快捷
                     // 记账行 → 记支出。
                     try {
-                        val detailIntent = createLaunchIntentWithDeepLink(context, "beecount://open?page=detail")
+                        val detailIntent = WidgetDeepLinkHelper.launchIntent(context, "beecount://open?page=detail")
                         val detailPending = PendingIntent.getActivity(
                             context, widgetId * 10 + 1, detailIntent,
                             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
                         )
                         setOnClickPendingIntent(R.id.widget_click, detailPending)
 
-                        val voiceIntent = createLaunchIntentWithDeepLink(context, "beecount://voice")
+                        val voiceIntent = WidgetDeepLinkHelper.launchIntent(context, "beecount://voice")
                         val voicePending = PendingIntent.getActivity(
                             context, widgetId * 10 + 2, voiceIntent,
                             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
                         )
                         setOnClickPendingIntent(R.id.click_voice, voicePending)
 
-                        val manualIntent = createLaunchIntentWithDeepLink(context, "beecount://new?type=expense")
+                        val manualIntent = WidgetDeepLinkHelper.launchIntent(context, "beecount://new?type=expense")
                         val manualPending = PendingIntent.getActivity(
                             context, widgetId * 10 + 3, manualIntent,
                             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
@@ -93,16 +91,5 @@ class BeeCountDashboardWidgetProvider : HomeWidgetProvider() {
                 Log.e(TAG, "Failed to update widget $widgetId", e)
             }
         }
-    }
-
-    private fun createLaunchIntentWithDeepLink(context: Context, url: String): Intent {
-        // 使用 launch intent 确保能打开 App，同时携带 deep link 数据
-        val intent = context.packageManager.getLaunchIntentForPackage(context.packageName)
-            ?: Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
-                setPackage(context.packageName)
-            }
-        intent.data = Uri.parse(url)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-        return intent
     }
 }

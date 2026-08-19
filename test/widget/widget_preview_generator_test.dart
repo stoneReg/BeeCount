@@ -524,33 +524,37 @@ Future<void> _generatePack(WidgetTester tester, _Pack p) async {
     tester,
     QuickAddView(
       size: HWSize.small,
-      categories: _quickAddCategories(p),
       themeColor: _honey,
       dark: false,
       voiceLabel: p.voiceLabel,
+      aiLabel: 'AI小助手',
+      cameraLabel: '拍照',
+      manualLabel: p.manualLabel,
       titleLabel: p.quickAddTitleLabel,
-      width: 155,
-      height: 155,
+      width: 110,
+      height: 110,
     ),
-    const Size(155, 155),
+    const Size(110, 110),
     p.outDir,
     'widget_preview_quickadd',
   );
 
-  // 3.5) 快速记账·中(Android 中号入口的选择器预览:2×4 网格,7 分类 + 记一笔)
+  // 3.5) 快速记账·中(Android 中号入口的选择器预览:2×2 四入口)
   await _capture(
     tester,
     QuickAddView(
       size: HWSize.medium,
-      categories: _quickAddCategories(p),
       themeColor: _honey,
       dark: false,
       voiceLabel: p.voiceLabel,
+      aiLabel: 'AI小助手',
+      cameraLabel: '拍照',
+      manualLabel: p.manualLabel,
       titleLabel: p.quickAddTitleLabel,
-      width: 364,
-      height: 169,
+      width: 250,
+      height: 110,
     ),
-    const Size(364, 169),
+    const Size(250, 110),
     p.outDir,
     'widget_preview_quickadd_medium',
   );

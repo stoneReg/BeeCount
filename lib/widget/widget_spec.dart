@@ -168,7 +168,8 @@ class WidgetSpec {
   static const quickAddSmall = WidgetSpec._(
     type: HWType.quickAdd,
     size: HWSize.small,
-    logicalSize: Size(155, 155),
+    // Android 2×2 格公式: 70×n−30 → n=2 时为 110dp;155dp 会被系统算成 3 格高。
+    logicalSize: Size(110, 110),
     iosKind: 'BeeCountQuickAddWidget',
     iosFamily: 'systemSmall',
     androidClassName: 'com.tntlikely.beecount.BeeCountQuickAddWidgetProvider',
@@ -179,7 +180,8 @@ class WidgetSpec {
   static const quickAddMedium = WidgetSpec._(
     type: HWType.quickAdd,
     size: HWSize.medium,
-    logicalSize: Size(364, 169),
+    // Android 4×2 格:宽 250dp、高 110dp;364×169 会被系统拉伸且与 1×4 布局不匹配。
+    logicalSize: Size(250, 110),
     iosKind: 'BeeCountQuickAddWidget',
     iosFamily: 'systemMedium',
     androidClassName: 'com.tntlikely.beecount.BeeCountQuickAddWidgetProvider',

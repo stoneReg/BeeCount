@@ -25,8 +25,5 @@ class BeeCountNetWorthLargeWidgetProvider : BeeCountNetWorthWidgetProvider()
 /** 预算进度·中(默认 4×2)。 */
 class BeeCountBudgetMediumWidgetProvider : BeeCountBudgetWidgetProvider()
 
-/** 快速记账·中(默认 4×2)。 */
-class BeeCountQuickAddMediumWidgetProvider : BeeCountQuickAddWidgetProvider()
-
 /** 最近交易·大(默认 4×4)。 */
 class BeeCountRecentLargeWidgetProvider : BeeCountRecentWidgetProvider()

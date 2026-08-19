@@ -3,36 +3,34 @@ package com.tntlikely.beecount
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.content.Context
-import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.BitmapFactory
-import android.net.Uri
 import android.util.Log
-import android.view.View
 import android.widget.RemoteViews
 import es.antonborri.home_widget.HomeWidgetProvider
-import org.json.JSONArray
-import java.io.File
 
 /**
- * 快速记账小组件(小/中两档):分类格 → 手动记支出(预填分类);末格 → 语音记账。
+ * 快速记账小组件:小档 2×2、中档 4×1(占 4×2 槽位),四入口深链固定。
  */
 open class BeeCountQuickAddWidgetProvider : HomeWidgetProvider() {
     companion object {
         private const val TAG = "BeeCountQuickAddWidget"
-        private const val WIDTH_BREAKPOINT_SMALL_MEDIUM_DP = 260
-        private const val META_SMALL = "widget_quickAdd_categoryIds_small"
-        private const val META_MEDIUM = "widget_quickAdd_categoryIds_medium"
+        private const val IMAGE_KEY_SMALL = "widget_quickAdd_small"
+        private const val IMAGE_KEY_MEDIUM = "widget_quickAdd_medium"
+
+        /** 语音 / AI / 拍照 / 记一笔 —— 小 2×2 与中 1×4 顺序一致。 */
+        private val ACTION_URLS = arrayOf(
+            "beecount://voice",
+            "beecount://ai-chat",
+            "beecount://camera",
+            "beecount://new?type=expense",
+        )
 
         private val CELL_IDS = intArrayOf(
             R.id.click_cell_0,
             R.id.click_cell_1,
             R.id.click_cell_2,
             R.id.click_cell_3,
-            R.id.click_cell_4,
-            R.id.click_cell_5,
-            R.id.click_cell_6,
-            R.id.click_cell_7,
         )
     }
 
@@ -40,39 +38,21 @@ open class BeeCountQuickAddWidgetProvider : HomeWidgetProvider() {
         context: Context,
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray,
-        widgetData: SharedPreferences
+        widgetData: SharedPreferences,
     ) {
         appWidgetIds.forEach { widgetId ->
             try {
-                val imageKey = resolveImageKey(appWidgetManager, widgetId)
-                val isSmall = imageKey == "widget_quickAdd_small"
-                val metaKey = if (isSmall) META_SMALL else META_MEDIUM
-                val categoryIds = parseCategoryIds(widgetData.getString(metaKey, null))
-                val cellCount = if (isSmall) 4 else 8
-                val categorySlots = cellCount - 1
-
-                val views = RemoteViews(context.packageName, R.layout.quick_add_widget).apply {
+                val imageKey = resolveImageKey(context, appWidgetManager, widgetId)
+                val layoutId = if (imageKey == IMAGE_KEY_SMALL) {
+                    R.layout.quick_add_widget
+                } else {
+                    R.layout.quick_add_widget_medium
+                }
+                val views = RemoteViews(context.packageName, layoutId).apply {
                     bindImage(widgetData, imageKey)
-                    for (i in 0 until 8) {
-                        val visible = i < cellCount
-                        setViewVisibility(CELL_IDS[i], if (visible) View.VISIBLE else View.GONE)
+                    for (i in CELL_IDS.indices) {
+                        bindClick(context, widgetId, CELL_IDS[i], ACTION_URLS[i], i)
                     }
-                    for (i in 0 until categorySlots) {
-                        val catId = categoryIds.getOrNull(i)
-                        val url = if (catId != null) {
-                            "beecount://new?type=expense&category=$catId"
-                        } else {
-                            "beecount://new?type=expense"
-                        }
-                        bindClick(context, widgetId, CELL_IDS[i], url, i)
-                    }
-                    bindClick(
-                        context,
-                        widgetId,
-                        CELL_IDS[categorySlots],
-                        "beecount://voice",
-                        100 + categorySlots,
-                    )
                 }
                 appWidgetManager.updateAppWidget(widgetId, views)
             } catch (e: Exception) {
@@ -89,8 +69,15 @@ open class BeeCountQuickAddWidgetProvider : HomeWidgetProvider() {
                 setImageViewBitmap(R.id.widget_image, bitmap)
                 return
             }
+            Log.w(TAG, "Failed to decode bitmap for key $imageKey path=$imagePath")
+        } else {
+            Log.w(TAG, "No image path for key $imageKey")
         }
-        setImageViewResource(R.id.widget_image, R.mipmap.ic_launcher)
+        setImageViewResource(
+            R.id.widget_image,
+            if (imageKey == IMAGE_KEY_MEDIUM) R.drawable.widget_preview_quickadd_medium
+            else R.drawable.widget_preview_quickadd,
+        )
     }
 
     private fun RemoteViews.bindClick(
@@ -100,49 +87,25 @@ open class BeeCountQuickAddWidgetProvider : HomeWidgetProvider() {
         url: String,
         requestSuffix: Int,
     ) {
-        val intent = createLaunchIntentWithDeepLink(context, url)
+        val intent = WidgetDeepLinkHelper.launchIntent(context, url)
         val pending = PendingIntent.getActivity(
             context,
-            widgetId * 100 + requestSuffix,
+            widgetId * 10 + requestSuffix,
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
         setOnClickPendingIntent(viewId, pending)
     }
 
-    private fun parseCategoryIds(raw: String?): List<Int> {
-        if (raw.isNullOrBlank()) return emptyList()
-        return try {
-            val arr = JSONArray(raw)
-            buildList {
-                for (i in 0 until arr.length()) {
-                    add(arr.getInt(i))
-                }
-            }
-        } catch (e: Exception) {
-            Log.w(TAG, "parseCategoryIds failed: ${e.message}")
-            emptyList()
-        }
-    }
-
-    private fun resolveImageKey(appWidgetManager: AppWidgetManager, widgetId: Int): String {
+    /** 中号入口 provider 固定 medium;父类 provider 在宽度不足 medium 阈值时用 small。 */
+    protected open fun resolveImageKey(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        widgetId: Int,
+    ): String {
         val options = appWidgetManager.getAppWidgetOptions(widgetId)
         val minWidth = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 0)
-        if (minWidth <= 0) return "widget_quickAdd_medium"
-        return if (minWidth < WIDTH_BREAKPOINT_SMALL_MEDIUM_DP) {
-            "widget_quickAdd_small"
-        } else {
-            "widget_quickAdd_medium"
-        }
-    }
-
-    private fun createLaunchIntentWithDeepLink(context: Context, url: String): Intent {
-        val intent = context.packageManager.getLaunchIntentForPackage(context.packageName)
-            ?: Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
-                setPackage(context.packageName)
-            }
-        intent.data = Uri.parse(url)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-        return intent
+        if (minWidth in 1..169) return IMAGE_KEY_SMALL
+        return IMAGE_KEY_MEDIUM
     }
 }

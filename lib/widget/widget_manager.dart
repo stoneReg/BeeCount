@@ -1,5 +1,4 @@
 import 'dart:async' show Completer;
-import 'dart:convert';
 import 'dart:io';
 import 'dart:ui' show PlatformDispatcher;
 
@@ -187,8 +186,10 @@ class WidgetManager {
     String totalAssetsLabel = '总资产',
     String totalLiabilitiesLabel = '总负债',
     String noAccountsLabel = '暂无账户',
-    // 快速记账末格「语音记账」文案,对应 arb key `fabActionVoice`。
-    String voiceLabel = '语音',
+    // 快速记账四格文案:语音 / AI / 拍照 / 记一笔。
+    String voiceLabel = '语音记账',
+    String aiLabel = 'AI小助手',
+    String cameraLabel = '拍照记账',
     // 综合仪表盘底栏「记一笔」文案,对应 arb key `widgetQuickAddLabel`。
     String manualLabel = '记一笔',
     // 预算进度(budget)视图文案。budgetLabel/budgetUsedLabel 文本与语义都
@@ -279,6 +280,8 @@ class WidgetManager {
             totalLiabilitiesLabel: totalLiabilitiesLabel,
             noAccountsLabel: noAccountsLabel,
             voiceLabel: voiceLabel,
+            aiLabel: aiLabel,
+            cameraLabel: cameraLabel,
             manualLabel: manualLabel,
             budgetLabel: budgetLabel,
             budgetUsedLabel: budgetUsedLabel,
@@ -370,7 +373,9 @@ class WidgetManager {
       totalAssetsLabel: l10n.totalAssets,
       totalLiabilitiesLabel: l10n.totalLiabilities,
       noAccountsLabel: l10n.widgetNoAccounts,
-      voiceLabel: l10n.fabActionVoice,
+      voiceLabel: l10n.quickActionVoice,
+      aiLabel: l10n.aiSettingsTitle,
+      cameraLabel: l10n.quickActionCamera,
       manualLabel: l10n.widgetQuickAddLabel,
       budgetLabel: l10n.budgetMonthlyBudget,
       budgetUsedLabel: l10n.budgetUsed,
@@ -421,6 +426,8 @@ class WidgetManager {
     required String totalLiabilitiesLabel,
     required String noAccountsLabel,
     required String voiceLabel,
+    required String aiLabel,
+    required String cameraLabel,
     required String manualLabel,
     required String budgetLabel,
     required String budgetUsedLabel,
@@ -468,6 +475,9 @@ class WidgetManager {
           themeColor: themeColor,
           dark: dark,
           voiceLabel: voiceLabel,
+          aiLabel: aiLabel,
+          cameraLabel: cameraLabel,
+          manualLabel: manualLabel,
           titleLabel: quickAddTitleLabel,
         );
         return;
@@ -657,23 +667,20 @@ class WidgetManager {
     required Color themeColor,
     required bool dark,
     required String voiceLabel,
+    required String aiLabel,
+    required String cameraLabel,
+    required String manualLabel,
     required String titleLabel,
   }) async {
-    // 批次内按最大需求取 7 个(medium 2×4 网格用满);small 由 QuickAddView
-    // 内部截断到 3 个 + 补位(见 WidgetGatherBatch.quickAddCategories 文档)。
-    final categories = await batch.quickAddCategories();
-    final categoryIds = categories.map((c) => c.categoryId).toList();
-    final metaKey = spec.size == HWSize.small
-        ? 'widget_quickAdd_categoryIds_small'
-        : 'widget_quickAdd_categoryIds_medium';
-    await HomeWidget.saveWidgetData(metaKey, jsonEncode(categoryIds));
-
+    final compact = spec.size == HWSize.small;
     final view = QuickAddView(
       size: spec.size,
-      categories: categories,
       themeColor: themeColor,
       dark: dark,
-      voiceLabel: voiceLabel,
+      voiceLabel: compact ? '语音' : voiceLabel,
+      aiLabel: compact ? 'AI' : aiLabel,
+      cameraLabel: compact ? '拍照' : cameraLabel,
+      manualLabel: manualLabel,
       titleLabel: titleLabel,
       width: spec.logicalSize.width,
       height: spec.logicalSize.height,
