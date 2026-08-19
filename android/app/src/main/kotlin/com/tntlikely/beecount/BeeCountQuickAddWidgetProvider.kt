@@ -8,28 +8,32 @@ import android.content.SharedPreferences
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.util.Log
+import android.view.View
 import android.widget.RemoteViews
 import es.antonborri.home_widget.HomeWidgetProvider
+import org.json.JSONArray
 import java.io.File
 
 /**
- * 快速记账小组件(小/中两档)。
- *
- * 对应 `lib/widget/widget_spec.dart` 的 `quickAddSmall/Medium`,渲染管线把
- * 图片分别写入 `widget_quickAdd_small` / `widget_quickAdd_medium` 两个 key。
- *
- * 尺寸判定机制同 [BeeCountNetWorthWidgetProvider]:本 provider 类名覆盖
- * 两档尺寸,`onUpdate` 按 `AppWidgetManager.getAppWidgetOptions` 读到的实际
- * 尺寸选择图片 key(见 [resolveImageKey]);Dart 侧 `matchInstalledAll` 为
- * 命中类名渲染该类型全部尺寸的图,任意缩放档位都有现成图可显。
+ * 快速记账小组件(小/中两档):分类格 → 手动记支出(预填分类);末格 → 语音记账。
  */
 open class BeeCountQuickAddWidgetProvider : HomeWidgetProvider() {
     companion object {
         private const val TAG = "BeeCountQuickAddWidget"
-
-        // 阈值取自 widget_spec.dart 的 logicalSize:small(155x155) 与
-        // medium(364x169) 宽度的中点,只是粗略分档,不代表精确换算。
         private const val WIDTH_BREAKPOINT_SMALL_MEDIUM_DP = 260
+        private const val META_SMALL = "widget_quickAdd_categoryIds_small"
+        private const val META_MEDIUM = "widget_quickAdd_categoryIds_medium"
+
+        private val CELL_IDS = intArrayOf(
+            R.id.click_cell_0,
+            R.id.click_cell_1,
+            R.id.click_cell_2,
+            R.id.click_cell_3,
+            R.id.click_cell_4,
+            R.id.click_cell_5,
+            R.id.click_cell_6,
+            R.id.click_cell_7,
+        )
     }
 
     override fun onUpdate(
@@ -38,70 +42,93 @@ open class BeeCountQuickAddWidgetProvider : HomeWidgetProvider() {
         appWidgetIds: IntArray,
         widgetData: SharedPreferences
     ) {
-        Log.d(TAG, "onUpdate called for ${appWidgetIds.size} widgets")
         appWidgetIds.forEach { widgetId ->
             try {
-                Log.d(TAG, "Updating widget $widgetId")
                 val imageKey = resolveImageKey(appWidgetManager, widgetId)
-                Log.d(TAG, "Widget $widgetId resolved image key: $imageKey")
+                val isSmall = imageKey == "widget_quickAdd_small"
+                val metaKey = if (isSmall) META_SMALL else META_MEDIUM
+                val categoryIds = parseCategoryIds(widgetData.getString(metaKey, null))
+                val cellCount = if (isSmall) 4 else 8
+                val categorySlots = cellCount - 1
 
                 val views = RemoteViews(context.packageName, R.layout.quick_add_widget).apply {
-                    val imagePath = widgetData.getString(imageKey, null)
-                    Log.d(TAG, "Image path from SharedPreferences: $imagePath")
-
-                    if (imagePath != null) {
-                        val file = File(imagePath)
-                        Log.d(TAG, "File exists: ${file.exists()}, size: ${if (file.exists()) file.length() else 0}")
-
-                        val bitmap = BitmapFactory.decodeFile(imagePath)
-                        if (bitmap != null) {
-                            Log.d(TAG, "Bitmap decoded successfully: ${bitmap.width}x${bitmap.height}")
-                            setImageViewBitmap(R.id.widget_image, bitmap)
+                    bindImage(widgetData, imageKey)
+                    for (i in 0 until 8) {
+                        val visible = i < cellCount
+                        setViewVisibility(CELL_IDS[i], if (visible) View.VISIBLE else View.GONE)
+                    }
+                    for (i in 0 until categorySlots) {
+                        val catId = categoryIds.getOrNull(i)
+                        val url = if (catId != null) {
+                            "beecount://new?type=expense&category=$catId"
                         } else {
-                            Log.e(TAG, "Failed to decode bitmap from file")
-                            setImageViewResource(R.id.widget_image, R.mipmap.ic_launcher)
+                            "beecount://new?type=expense"
                         }
-                    } else {
-                        Log.w(TAG, "No image path for key $imageKey, showing placeholder")
-                        setImageViewResource(R.id.widget_image, R.mipmap.ic_launcher)
+                        bindClick(context, widgetId, CELL_IDS[i], url, i)
                     }
-
-                    // 整块点击 → 新建支出。第一版不分区。
-                    // TODO: 常用分类格拆分点击区域后,改为按分类深链
-                    // beecount://new?type=expense&category=<id>。
-                    try {
-                        val intent = createLaunchIntentWithDeepLink(context, "beecount://new?type=expense")
-                        val pending = PendingIntent.getActivity(
-                            context, widgetId, intent,
-                            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                        )
-                        setOnClickPendingIntent(R.id.widget_click, pending)
-                        Log.d(TAG, "Set click handler")
-                    } catch (e: Exception) {
-                        Log.e(TAG, "Failed to set click", e)
-                    }
+                    bindClick(
+                        context,
+                        widgetId,
+                        CELL_IDS[categorySlots],
+                        "beecount://voice",
+                        100 + categorySlots,
+                    )
                 }
-
                 appWidgetManager.updateAppWidget(widgetId, views)
-                Log.d(TAG, "Widget $widgetId updated successfully")
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to update widget $widgetId", e)
             }
         }
     }
 
-    /**
-     * 按当前 widget 实际尺寸(`OPTION_APPWIDGET_MIN_WIDTH`)判定 small/medium
-     * 档位,选择对应的图片 key。拿不到尺寸信息(选项缺失或为 0)时退化为
-     * medium。
-     */
+    private fun RemoteViews.bindImage(widgetData: SharedPreferences, imageKey: String) {
+        val imagePath = widgetData.getString(imageKey, null)
+        if (imagePath != null) {
+            val bitmap = BitmapFactory.decodeFile(imagePath)
+            if (bitmap != null) {
+                setImageViewBitmap(R.id.widget_image, bitmap)
+                return
+            }
+        }
+        setImageViewResource(R.id.widget_image, R.mipmap.ic_launcher)
+    }
+
+    private fun RemoteViews.bindClick(
+        context: Context,
+        widgetId: Int,
+        viewId: Int,
+        url: String,
+        requestSuffix: Int,
+    ) {
+        val intent = createLaunchIntentWithDeepLink(context, url)
+        val pending = PendingIntent.getActivity(
+            context,
+            widgetId * 100 + requestSuffix,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+        setOnClickPendingIntent(viewId, pending)
+    }
+
+    private fun parseCategoryIds(raw: String?): List<Int> {
+        if (raw.isNullOrBlank()) return emptyList()
+        return try {
+            val arr = JSONArray(raw)
+            buildList {
+                for (i in 0 until arr.length()) {
+                    add(arr.getInt(i))
+                }
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "parseCategoryIds failed: ${e.message}")
+            emptyList()
+        }
+    }
+
     private fun resolveImageKey(appWidgetManager: AppWidgetManager, widgetId: Int): String {
         val options = appWidgetManager.getAppWidgetOptions(widgetId)
         val minWidth = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 0)
-
-        if (minWidth <= 0) {
-            return "widget_quickAdd_medium"
-        }
+        if (minWidth <= 0) return "widget_quickAdd_medium"
         return if (minWidth < WIDTH_BREAKPOINT_SMALL_MEDIUM_DP) {
             "widget_quickAdd_small"
         } else {
@@ -110,7 +137,6 @@ open class BeeCountQuickAddWidgetProvider : HomeWidgetProvider() {
     }
 
     private fun createLaunchIntentWithDeepLink(context: Context, url: String): Intent {
-        // 使用 launch intent 确保能打开 App，同时携带 deep link 数据
         val intent = context.packageManager.getLaunchIntentForPackage(context.packageName)
             ?: Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
                 setPackage(context.packageName)

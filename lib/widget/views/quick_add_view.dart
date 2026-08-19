@@ -14,11 +14,9 @@ import 'widget_view_style.dart';
 /// 只做展示,不含深链跳转(点击态属原生壳 P3/P4 range,这里只画图)。
 ///
 /// - small(155×155):2×2 格 = 前 3 个分类(不足 3 个用占位格补齐,保持网格
-///   形状不塌)+ 第 4 格固定是「记一笔」按钮。
+///   形状不塌)+ 第 4 格固定是「语音记账」按钮。
 /// - medium(364×169):2×4 格 = 前 7 个分类(同样用占位格补齐)+ 末格固定是
-///   「记一笔」。**不是**小号那样只画一行——364×169 里单行格子只占得满
-///   上半截,下面一大片空白(2026-08 用户点名"空白很多不好看");两行网格
-///   同时把入口数从 4 个提到 7 个,更符合"快速"记账的定位。
+///   「语音记账」。
 class QuickAddView extends StatelessWidget {
   final HWSize size;
 
@@ -27,8 +25,8 @@ class QuickAddView extends StatelessWidget {
   final Color themeColor;
   final bool dark;
 
-  /// 「记一笔」按钮文案。l10n 暂无独立 key。
-  final String addLabel;
+  /// 末格「语音记账」按钮文案(对应 arb `fabActionVoice`)。
+  final String voiceLabel;
 
   /// 左上内容标签(「快速记账」,对应 arb `widgetGalleryQuickAddTitle`)——
   /// 六款组件统一的内容标签制(2026-07 用户拍板 A 方案)。
@@ -43,7 +41,7 @@ class QuickAddView extends StatelessWidget {
     required this.categories,
     required this.themeColor,
     required this.dark,
-    required this.addLabel,
+    required this.voiceLabel,
     required this.width,
     required this.height,
     this.titleLabel = '快速记账',
@@ -87,7 +85,7 @@ class QuickAddView extends StatelessWidget {
       // 2×2 网格形状不塌——不是 bug,是数据本就还没攒够。
       cells.add(_placeholderCell());
     }
-    cells.add(_addButtonCell());
+    cells.add(_voiceButtonCell());
 
     Widget gridCell(Widget child) => Expanded(
           child: Padding(padding: const EdgeInsets.all(4), child: child),
@@ -143,7 +141,7 @@ class QuickAddView extends StatelessWidget {
     while (cells.length < _mediumCells - 1) {
       cells.add(_placeholderCell());
     }
-    cells.add(_addButtonCell());
+    cells.add(_voiceButtonCell());
 
     return _cardContainer(
       child: Column(
@@ -223,7 +221,7 @@ class QuickAddView extends StatelessWidget {
     );
   }
 
-  Widget _addButtonCell() {
+  Widget _voiceButtonCell() {
     return Container(
       decoration: BoxDecoration(
         color: themeColor,
@@ -234,11 +232,10 @@ class QuickAddView extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
         children: [
-          // 与 _categoryGlyph 同尺寸(small 紧凑档曾因 22 溢出 3.5px)。
-          Icon(Icons.add, color: Colors.white, size: _cellGlyph),
+          Icon(Icons.mic, color: Colors.white, size: _cellGlyph),
           SizedBox(height: _cellGap),
           Text(
-            addLabel,
+            voiceLabel,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.center,

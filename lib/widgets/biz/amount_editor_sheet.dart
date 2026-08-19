@@ -24,6 +24,7 @@ import '../currency/currency_flag.dart';
 import '../ui/toast.dart';
 import 'tag_chip.dart';
 import '../../pages/attachment/attachment_preview_page.dart';
+import '../../pages/cloud/transaction_audit_page.dart';
 
 /// 共享账本 tx 作者信息(创建人 + 最后编辑人)— 编辑器底部 sheet 用。
 /// editingTransactionId=null(新建 tx)或非共享账本 → 返 null,widget 不渲染。
@@ -71,6 +72,22 @@ final _txAuthorInfoProvider =
     currentUserId: me?.id,
     members: members,
   );
+});
+
+final _txAuditNavProvider = FutureProvider.autoDispose
+    .family<({String ledgerSyncId, String txSyncId})?, int>((ref, txId) async {
+  final repo = ref.watch(repositoryProvider);
+  final tx = await repo.getTransactionById(txId);
+  if (tx == null) return null;
+  final txSyncId = tx.syncId;
+  if (txSyncId == null || txSyncId.isEmpty) return null;
+  final ledger = await repo.getLedgerById(tx.ledgerId);
+  if (ledger == null) return null;
+  final ledgerSyncId = ledger.syncId;
+  if (ledgerSyncId == null || ledgerSyncId.isEmpty) return null;
+  final cloud = await ref.watch(beecountCloudProviderInstance.future);
+  if (cloud == null) return null;
+  return (ledgerSyncId: ledgerSyncId, txSyncId: txSyncId);
 });
 
 /// 紧凑头像组 — UX 规则(用户指定):
@@ -179,6 +196,47 @@ class _AvatarSlot extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _TxAuditLink extends ConsumerWidget {
+  const _TxAuditLink({required this.editingTransactionId});
+
+  final int editingTransactionId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final navAsync = ref.watch(_txAuditNavProvider(editingTransactionId));
+    return navAsync.when(
+      data: (nav) {
+        if (nav == null) return const SizedBox.shrink();
+        return Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton.icon(
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => TransactionAuditPage(
+                    ledgerSyncId: nav.ledgerSyncId,
+                    transactionSyncId: nav.txSyncId,
+                  ),
+                ),
+              );
+            },
+            icon: Icon(Icons.history, size: 16, color: BeeTokens.textSecondary(context)),
+            label: Text(l10n.txAuditViewHistory),
+            style: TextButton.styleFrom(
+              padding: EdgeInsets.zero,
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+          ),
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
     );
   }
 }
@@ -893,6 +951,10 @@ class _AmountEditorSheetState extends ConsumerState<AmountEditorSheet> {
                 _buildCurrencySection(context),
               ],
             ),
+            if (widget.editingTransactionId != null) ...[
+              const SizedBox(height: 4),
+              _TxAuditLink(editingTransactionId: widget.editingTransactionId!),
+            ],
             const SizedBox(height: 10),
             // 备注输入区域 - 带历史备注图标前缀
             TextField(

@@ -26,18 +26,20 @@ struct BeeCountQuickAddProvider: TimelineProvider {
         }
     }
 
+    private func categoryMetaKey(for family: WidgetFamily) -> String {
+        family == .systemSmall
+            ? "widget_quickAdd_categoryIds_small"
+            : "widget_quickAdd_categoryIds_medium"
+    }
+
     func placeholder(in context: Context) -> BeeCountQuickAddEntry {
         BeeCountQuickAddEntry(
             date: Date(),
-            // 添加页预览:用 bundle 内静态资产(见 WidgetPreviewAssets 注释)。
             widgetImagePath: WidgetPreviewAssets.path(forImageKey: imageKey(for: context.family))
         )
     }
 
     func getSnapshot(in context: Context, completion: @escaping (BeeCountQuickAddEntry) -> ()) {
-        // 添加页预览(isPreview):运行时图片在预览上下文读不到(App
-        // Group 访问受限,添加页只会显示占位色块),改用 bundle 内静态
-        // 预览资产,详见 WidgetPreviewAssets。
         if context.isPreview {
             completion(BeeCountQuickAddEntry(
                 date: Date(),
@@ -46,48 +48,90 @@ struct BeeCountQuickAddProvider: TimelineProvider {
         }
         let userDefaults = UserDefaults(suiteName: "group.com.tntlikely.beecount")
         let imagePath = userDefaults?.string(forKey: imageKey(for: context.family)) ?? ""
-        let entry = BeeCountQuickAddEntry(date: Date(), widgetImagePath: imagePath)
-        completion(entry)
+        completion(BeeCountQuickAddEntry(date: Date(), widgetImagePath: imagePath))
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) -> ()) {
         let userDefaults = UserDefaults(suiteName: "group.com.tntlikely.beecount")
         let imagePath = userDefaults?.string(forKey: imageKey(for: context.family)) ?? ""
         let entry = BeeCountQuickAddEntry(date: Date(), widgetImagePath: imagePath)
-
-        // 设置30分钟后刷新
         let nextUpdate = Calendar.current.date(byAdding: .minute, value: 30, to: Date())!
-        let timeline = Timeline(entries: [entry], policy: .after(nextUpdate))
-        completion(timeline)
+        completion(Timeline(entries: [entry], policy: .after(nextUpdate)))
     }
 }
+
+private func parseCategoryIds(metaKey: String) -> [Int] {
+    guard let raw = UserDefaults(suiteName: "group.com.tntlikely.beecount")?.string(forKey: metaKey),
+          let data = raw.data(using: .utf8),
+          let arr = try? JSONSerialization.jsonObject(with: data) as? [Int] else {
+        return []
+    }
+    return arr
+}
+
+private func expenseURL(categoryId: Int?) -> URL {
+    if let id = categoryId {
+        return URL(string: "beecount://new?type=expense&category=\(id)")!
+    }
+    return URL(string: "beecount://new?type=expense")!
+}
+
+private let voiceURL = URL(string: "beecount://voice")!
 
 struct BeeCountQuickAddWidgetEntryView : View {
     var entry: BeeCountQuickAddProvider.Entry
     @Environment(\.widgetFamily) var widgetFamily
 
-    // 快速记账卡片点击 → 新建支出。第一版整块点击、不分区。
-    // TODO: 常用分类格拆分点击区域后，改为按分类深链
-    // `beecount://new?type=expense&category=<id>`（分类 id 取自渲染时
-    // 的取数结果，需要额外把每格坐标信息一并写入共享存储或改用
-    // AppIntent 交互式布局）。
-    private let addExpenseURL = URL(string: "beecount://new?type=expense")!
+    private var isSmall: Bool { widgetFamily == .systemSmall }
+    private var columns: Int { isSmall ? 2 : 4 }
+    private var cellCount: Int { isSmall ? 4 : 8 }
+    private var categorySlots: Int { cellCount - 1 }
 
     var body: some View {
         if let uiImage = UIImage(contentsOfFile: entry.widgetImagePath) {
-            Link(destination: addExpenseURL) {
-                Image(uiImage: uiImage)
-                    .resizable()
-                    .scaledToFill()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .clipped()
+            GeometryReader { geometry in
+                let metaKey = isSmall
+                    ? "widget_quickAdd_categoryIds_small"
+                    : "widget_quickAdd_categoryIds_medium"
+                let categoryIds = parseCategoryIds(metaKey: metaKey)
+
+                ZStack {
+                    Image(uiImage: uiImage)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: geometry.size.width, height: geometry.size.height)
+                        .clipped()
+
+                    // 透明点击层:跳过标题 ~18%,下方 2×2 / 2×4 网格(与 Android 对齐)
+                    VStack(spacing: 0) {
+                        Color.clear.frame(height: geometry.size.height * 0.18)
+                        ForEach(0..<2, id: \.self) { row in
+                            HStack(spacing: 0) {
+                                ForEach(0..<columns, id: \.self) { col in
+                                    let index = row * columns + col
+                                    if index < categorySlots {
+                                        Link(destination: expenseURL(categoryId: categoryIds.indices.contains(index) ? categoryIds[index] : nil)) {
+                                            Color.clear
+                                        }
+                                    } else if index == categorySlots {
+                                        Link(destination: voiceURL) {
+                                            Color.clear
+                                        }
+                                    } else {
+                                        Color.clear
+                                    }
+                                }
+                            }
+                            .frame(height: geometry.size.height * 0.41)
+                        }
+                    }
+                }
             }
         } else {
-            // Placeholder view when image is not available
             ZStack {
                 Color(red: 1.0, green: 0.76, blue: 0.03)
                 VStack {
-                    Image(systemName: "plus.circle.fill")
+                    Image(systemName: "mic.fill")
                         .font(.system(size: 32))
                         .foregroundColor(.white)
                     Text("快速记账")
@@ -95,7 +139,7 @@ struct BeeCountQuickAddWidgetEntryView : View {
                         .foregroundColor(.white)
                 }
             }
-            .widgetURL(addExpenseURL)
+            .widgetURL(voiceURL)
         }
     }
 }
@@ -115,8 +159,8 @@ struct BeeCountQuickAddWidget: Widget {
             }
         }
         .configurationDisplayName("快速记账")
-        .description("常用分类一键速记")
+        .description("常用分类一键速记 · 末格语音记账")
         .supportedFamilies([.systemSmall, .systemMedium])
-        .contentMarginsDisabled()  // Remove default padding/margins in iOS 17+
+        .contentMarginsDisabled()
     }
 }

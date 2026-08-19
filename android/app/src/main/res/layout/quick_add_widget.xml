@@ -4,12 +4,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!--
-        scaleType=fitCenter:
-          按 Flutter 渲染图的原比例完整显示,不裁减,道理同 beecount_widget.xml
-          ——用户把 widget 拉到跟渲染图比例不一致的尺寸时,居中留白(letterbox)
-          而不是切内容或变形拉伸。
-    -->
     <ImageView
         android:id="@+id/widget_image"
         android:layout_width="match_parent"
@@ -17,13 +11,40 @@
         android:scaleType="fitCenter"
         android:contentDescription="Widget content" />
 
-    <!--
-        整块点击层:第一版不分区,点击任意位置都跳同一深链。
-        TODO: 分区点击(如按常用分类格跳转)见 BeeCountQuickAddWidgetProvider 注释。
-    -->
-    <FrameLayout
-        android:id="@+id/widget_click"
+    <!-- 跳过标题区 ~18%,下方 2×2 / 2×4 网格点击(与 QuickAddView 对齐) -->
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="18" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="41"
+            android:orientation="horizontal">
+
+            <FrameLayout android:id="@+id/click_cell_0" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" />
+            <FrameLayout android:id="@+id/click_cell_1" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" />
+            <FrameLayout android:id="@+id/click_cell_2" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" />
+            <FrameLayout android:id="@+id/click_cell_3" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="41"
+            android:orientation="horizontal">
+
+            <FrameLayout android:id="@+id/click_cell_4" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" />
+            <FrameLayout android:id="@+id/click_cell_5" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" />
+            <FrameLayout android:id="@+id/click_cell_6" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" />
+            <FrameLayout android:id="@+id/click_cell_7" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" />
+        </LinearLayout>
+    </LinearLayout>
 
 </FrameLayout>

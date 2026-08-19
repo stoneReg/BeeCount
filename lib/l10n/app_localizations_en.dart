@@ -3495,6 +3495,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cloudBeeCountCloudAttachmentHint => 'Receipt images backed up to cloud automatically';
 
   @override
+  String get txAuditTitle => 'Edit history';
+
+  @override
+  String get txAuditRecentSubtitle => 'View cloud transaction edit history';
+
+  @override
+  String get txAuditEmpty => 'No edit history yet';
+
+  @override
+  String get txAuditLoadFailed => 'Failed to load edit history';
+
+  @override
+  String get txAuditActionCreate => 'Created';
+
+  @override
+  String get txAuditActionUpdate => 'Updated';
+
+  @override
+  String get txAuditActionDelete => 'Deleted';
+
+  @override
+  String get txAuditViewHistory => 'Edit history';
+
+  @override
+  String get txAuditLoadMore => 'Load more';
+
+  @override
   String get cloudTabOffline => 'Offline';
 
   @override

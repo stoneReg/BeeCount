@@ -63,8 +63,11 @@ class DashboardView extends StatelessWidget {
   /// 最近交易为空时的占位文案。
   final String noTransactionsLabel;
 
-  /// 「记一笔」按钮文案。
-  final String quickAddLabel;
+  /// 底栏「语音记账」文案(对应 arb `fabActionVoice`)。
+  final String voiceLabel;
+
+  /// 底栏「记一笔」文案(对应 arb `widgetQuickAddLabel`)。
+  final String manualLabel;
 
   final double width;
   final double height;
@@ -82,7 +85,8 @@ class DashboardView extends StatelessWidget {
     this.recentLabel = '最近交易',
     this.uncategorizedLabel = '未分类',
     this.noTransactionsLabel = '暂无交易',
-    this.quickAddLabel = '记一笔',
+    this.voiceLabel = '语音',
+    this.manualLabel = '记一笔',
     this.titleLabel = '本月概览',
     required this.width,
     required this.height,
@@ -238,22 +242,40 @@ class DashboardView extends StatelessWidget {
     );
   }
 
-  /// 底部快捷记账行:quickAdd 前 3 个分类格 + 固定「记一笔」按钮,等分铺满
-  /// 一行(视觉语言同 `QuickAddView`,见类文档"防溢出"上一段的说明)。
+  /// 底部快捷记账行:quickAdd 前 3 个分类格 + 语音(60%) / 手动(40%)。
   Widget _quickAddRow(List<QuickAddCategoryItem> categories) {
-    final cells = <Widget>[
-      for (final c in categories) _quickAddCategoryCell(c),
-      _quickAddButtonCell(),
-    ];
-    return Row(
+    return Column(
       children: [
-        for (final cell in cells)
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 3),
-              child: cell,
+        Row(
+          children: [
+            for (final c in categories.take(3))
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 3),
+                  child: _quickAddCategoryCell(c),
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        Row(
+          children: [
+            Expanded(
+              flex: 60,
+              child: Padding(
+                padding: const EdgeInsets.only(right: 3),
+                child: _voiceButtonCell(),
+              ),
             ),
-          ),
+            Expanded(
+              flex: 40,
+              child: Padding(
+                padding: const EdgeInsets.only(left: 3),
+                child: _manualButtonCell(),
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -282,7 +304,7 @@ class DashboardView extends StatelessWidget {
     );
   }
 
-  Widget _quickAddButtonCell() {
+  Widget _voiceButtonCell() {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 6),
       decoration: BoxDecoration(
@@ -292,10 +314,38 @@ class DashboardView extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          const Icon(Icons.mic, color: Colors.white, size: 16),
+          const SizedBox(height: 2),
+          Text(
+            voiceLabel,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 9,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _manualButtonCell() {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      decoration: BoxDecoration(
+        color: themeColor.withValues(alpha: dark ? 0.35 : 0.85),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
           const Icon(Icons.add, color: Colors.white, size: 16),
           const SizedBox(height: 2),
           Text(
-            quickAddLabel,
+            manualLabel,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.center,

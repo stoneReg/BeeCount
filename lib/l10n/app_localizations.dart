@@ -6650,6 +6650,24 @@ abstract class AppLocalizations {
   /// **'Receipt images backed up to cloud automatically'**
   String get cloudBeeCountCloudAttachmentHint;
 
+  String get txAuditTitle;
+
+  String get txAuditRecentSubtitle;
+
+  String get txAuditEmpty;
+
+  String get txAuditLoadFailed;
+
+  String get txAuditActionCreate;
+
+  String get txAuditActionUpdate;
+
+  String get txAuditActionDelete;
+
+  String get txAuditViewHistory;
+
+  String get txAuditLoadMore;
+
   /// No description provided for @cloudTabOffline.
   ///
   /// In en, this message translates to:
