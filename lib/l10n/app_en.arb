@@ -4492,5 +4492,18 @@
   "aiReasoningLow": "Low",
   "aiReasoningMedium": "Medium",
   "aiReasoningOff": "Off",
-  "aiReasoningTitle": "Deep reasoning"
+  "aiReasoningTitle": "Deep reasoning",
+  "txAuditActionCreate": "Record added",
+  "txAuditActionDelete": "Record deleted",
+  "txAuditActionUpdate": "Record updated",
+  "txAuditDeleteDetailMissing": "(Bill details were not kept for this historical delete)",
+  "txAuditEmpty": "No edit history yet",
+  "txAuditFieldAttribution": "Source",
+  "txAuditFieldChanges": "Changes",
+  "txAuditFieldType": "Type",
+  "txAuditLoadFailed": "Failed to load edit history",
+  "txAuditLoadMore": "Load more",
+  "txAuditRecentSubtitle": "View cloud transaction edit history",
+  "txAuditTitle": "Edit history",
+  "txAuditViewHistory": "Edit history"
 }

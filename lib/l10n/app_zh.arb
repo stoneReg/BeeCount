@@ -4039,5 +4039,18 @@
   "aiReasoningLow": "低",
   "aiReasoningMedium": "中",
   "aiReasoningOff": "关闭",
-  "aiReasoningTitle": "深度思考"
+  "aiReasoningTitle": "深度思考",
+  "txAuditActionCreate": "新增记录",
+  "txAuditActionDelete": "删除记录",
+  "txAuditActionUpdate": "修改记录",
+  "txAuditDeleteDetailMissing": "（历史删除记录未留存账单详情）",
+  "txAuditEmpty": "暂无修改记录",
+  "txAuditFieldAttribution": "归属",
+  "txAuditFieldChanges": "修改内容",
+  "txAuditFieldType": "类型",
+  "txAuditLoadFailed": "加载修改记录失败",
+  "txAuditLoadMore": "加载更多",
+  "txAuditRecentSubtitle": "查看云端账单修改历史",
+  "txAuditTitle": "修改记录",
+  "txAuditViewHistory": "修改记录"
 }
