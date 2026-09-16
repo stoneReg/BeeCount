@@ -84,13 +84,16 @@ jobs:
           echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
 
       - name: Setup Java 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: "zulu"
           java-version: "17"
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
+        with:
+          # Google 已下架旧包 `tools`；v3 默认仍会 sdkmanager tools 导致失败
+          packages: platform-tools
 
       - name: Install Android build-tools and platforms
         run: |
