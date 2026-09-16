@@ -100,6 +100,9 @@ jobs:
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v4
+        with:
+          # Google 已下架旧包 `tools`；v3 默认仍会 sdkmanager tools 导致失败
+          packages: platform-tools
 
       - name: Install Android build-tools and platforms
         run: |
@@ -363,7 +366,8 @@ jobs:
     name: iOS (app.zip + unsigned .ipa)
     runs-on: macos-latest
     needs: [check-branch]
-    if: always() && !contains(github.ref_name, '-beta.') && !contains(github.event.inputs.tag_name, '-beta.') && (needs.check-branch.result == 'success' || github.event_name == 'push')
+    # 暂时屏蔽 iOS 打包与发布，Release 只保留 Android APK/AAB
+    if: false
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -774,8 +778,7 @@ jobs:
     needs:
       - check-branch
       - android
-      - ios
-    if: always() && !contains(github.ref_name, '-beta.') && !contains(github.event.inputs.tag_name, '-beta.') && (needs.check-branch.result == 'success' || github.event_name == 'push') && needs.android.result == 'success' && needs.ios.result == 'success'
+    if: always() && !contains(github.ref_name, '-beta.') && !contains(github.event.inputs.tag_name, '-beta.') && (needs.check-branch.result == 'success' || github.event_name == 'push') && needs.android.result == 'success'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -843,11 +846,7 @@ jobs:
           echo "== dist tree =="
           ls -R ./dist || true
 
-      - name: Download iOS artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: ios
-          path: ./dist/ios
+      # iOS 暂时不打包，跳过下载 iOS artifacts
 
       - name: Generate release notes
         id: notes
@@ -893,7 +892,6 @@ jobs:
           files: |
             dist/android/**/*.apk
             dist/android/**/*.aab
-            dist/ios/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

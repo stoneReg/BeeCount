@@ -19,6 +19,7 @@ import '../../services/marketing/product_promos.dart';
 import 'help_center_page.dart';
 import 'log_center_page.dart';
 import 'privacy_policy_page.dart';
+import '../cloud/transaction_audit_page.dart';
 
 /// 是否为 Google Play 版本（通过 CI 构建时 --dart-define=GOOGLE_PLAY=true 注入）
 const _isGooglePlayBuild =
@@ -318,6 +319,34 @@ class _AboutPageState extends ConsumerState<AboutPage> {
                               MaterialPageRoute(
                                 builder: (_) => const LogCenterPage(),
                               ),
+                            );
+                          },
+                        ),
+                        BeeTokens.cardDivider(context),
+                        Consumer(
+                          builder: (context, ref, _) {
+                            final cloudAsync =
+                                ref.watch(beecountCloudProviderInstance);
+                            final cloud = cloudAsync.valueOrNull;
+                            if (cloud == null) return const SizedBox.shrink();
+                            return Column(
+                              children: [
+                                AppListTile(
+                                  leading: Icons.history,
+                                  title: l10n.txAuditTitle,
+                                  subtitle: l10n.txAuditRecentSubtitle,
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) =>
+                                            const TransactionAuditPage(),
+                                      ),
+                                    );
+                                  },
+                                ),
+                                BeeTokens.cardDivider(context),
+                              ],
                             );
                           },
                         ),
