@@ -62,7 +62,8 @@ struct BeeCountDashboardWidgetEntryView : View {
     // 分区点击(2026-07 真机反馈:底部画着「记一笔」却整块跳明细,点记一笔
     // 进了洞察页):上部主体 → 明细,底部快捷记账行 → 记支出。
     private let detailURL = URL(string: "beecount://open?page=detail")!
-    private let expenseURL = URL(string: "beecount://new?type=expense")!
+    private let voiceURL = URL(string: "beecount://voice")!
+    private let manualURL = URL(string: "beecount://new?type=expense")!
 
     var body: some View {
         if let uiImage = UIImage(contentsOfFile: entry.widgetImagePath) {
@@ -74,16 +75,22 @@ struct BeeCountDashboardWidgetEntryView : View {
                         .frame(width: geometry.size.width, height: geometry.size.height)
                         .clipped()
 
-                    // 透明点击层:底部快捷记账行约占卡片高度 18%
-                    // (与 DashboardView 底部按钮行的布局比例对齐)。
+                    // 透明点击层:上部主体 → 明细;底栏 60% 语音 / 40% 手动记一笔
                     VStack(spacing: 0) {
                         Link(destination: detailURL) {
                             Color.clear
                         }
                         .frame(height: geometry.size.height * 0.82)
-                        Link(destination: expenseURL) {
-                            Color.clear
+                        HStack(spacing: 0) {
+                            Link(destination: voiceURL) {
+                                Color.clear
+                            }
+                            .frame(width: geometry.size.width * 0.60)
+                            Link(destination: manualURL) {
+                                Color.clear
+                            }
                         }
+                        .frame(height: geometry.size.height * 0.18)
                     }
                 }
             }

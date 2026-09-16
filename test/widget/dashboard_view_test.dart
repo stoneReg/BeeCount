@@ -149,7 +149,8 @@ void main() {
         expect(find.text('最近交易'), findsOneWidget);
         // recent 只取前 2 笔,即便传入了 3 笔。
         expect(find.byType(RecentTransactionRow), findsNWidgets(2));
-        // quickAdd 只取前 3 个分类 + 1 个记一笔按钮。
+        // quickAdd 只取前 3 个分类 + 语音/记一笔底栏。
+        expect(find.text('语音'), findsOneWidget);
         expect(find.text('记一笔'), findsOneWidget);
       });
 
