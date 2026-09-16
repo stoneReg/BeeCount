@@ -3,7 +3,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:beecount/ai/providers/ai_constants.dart';
 import 'package:beecount/ai/providers/ai_provider_factory.dart';
-import 'package:beecount/ai/providers/ai_reasoning_adapter.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
