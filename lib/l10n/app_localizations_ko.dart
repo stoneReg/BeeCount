@@ -7961,4 +7961,12 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get txAuditViewHistory => 'Edit history';
+
+  @override
+  String get updateAvailableAction => '업데이트';
+
+  @override
+  String updateAvailableBanner(String version) {
+    return '새 버전 $version 이용 가능';
+  }
 }

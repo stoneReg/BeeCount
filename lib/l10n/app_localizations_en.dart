@@ -7961,4 +7961,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get txAuditViewHistory => 'Edit history';
+
+  @override
+  String get updateAvailableAction => 'Update';
+
+  @override
+  String updateAvailableBanner(String version) {
+    return 'New version $version available';
+  }
 }

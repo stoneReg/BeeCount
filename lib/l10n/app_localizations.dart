@@ -15085,6 +15085,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Edit history'**
   String get txAuditViewHistory;
+
+  /// No description provided for @updateAvailableAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Update'**
+  String get updateAvailableAction;
+
+  /// No description provided for @updateAvailableBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'New version {version} available'**
+  String updateAvailableBanner(String version);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

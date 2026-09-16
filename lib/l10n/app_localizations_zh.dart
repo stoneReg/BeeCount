@@ -7955,6 +7955,14 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get txAuditViewHistory => '修改记录';
+
+  @override
+  String get updateAvailableAction => '更新';
+
+  @override
+  String updateAvailableBanner(String version) {
+    return '发现新版本 $version';
+  }
 }
 
 /// The translations for Chinese, as used in Taiwan (`zh_TW`).
@@ -15497,4 +15505,12 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get aiReasoningTitle => '深度思考';
+
+  @override
+  String get updateAvailableAction => '更新';
+
+  @override
+  String updateAvailableBanner(String version) {
+    return '發現新版本 $version';
+  }
 }

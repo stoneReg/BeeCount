@@ -3812,5 +3812,14 @@
   "txAuditLoadMore": "Load more",
   "txAuditRecentSubtitle": "View cloud transaction edit history",
   "txAuditTitle": "Edit history",
-  "txAuditViewHistory": "Edit history"
+  "txAuditViewHistory": "Edit history",
+  "updateAvailableAction": "Update",
+  "updateAvailableBanner": "New version {version} available",
+  "@updateAvailableBanner": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  }
 }
