@@ -9,8 +9,12 @@ import 'package:flutter_ai_kit_openai/flutter_ai_kit_openai.dart'
     show OpenAIException;
 import 'package:flutter_ai_kit_zhipu/flutter_ai_kit_zhipu.dart';
 
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'ai_constants.dart';
 import 'ai_provider_config.dart';
 import 'ai_provider_manager.dart';
+import 'ai_reasoning_adapter.dart';
 import '../../services/system/logger_service.dart';
 
 /// AI Provider 工厂类
@@ -493,6 +497,42 @@ class AIProviderFactory {
     }
   }
 
+  /// 当前全局语音识别模式（传统转写 / 多模态理解）。
+  static Future<AIAudioMode> resolveAudioMode() async {
+    final prefs = await SharedPreferences.getInstance();
+    return AIAudioModeCodec.fromStorage(
+      prefs.getString(AIConstants.keyAudioMode),
+    );
+  }
+
+  /// 多模态语音理解（一步式）：把音频 + [prompt] 直接交给 chat 模型。
+  static Future<String> audioChat(
+    File audio,
+    String prompt, {
+    String? logTag,
+  }) async {
+    final tag = logTag ?? 'AIFactory';
+
+    final config = await AIProviderManager.getProviderForCapability(
+      AICapabilityType.speech,
+    );
+
+    if (config == null || !config.isValid) {
+      throw AIException('未配置语音转文字服务商');
+    }
+    if (!config.supportsSpeech) {
+      throw AIException('服务商 ${config.name} 未配置语音模型');
+    }
+
+    logger.debug(
+        tag, '发起多模态语音理解 (${config.name}, 模型: ${config.audioModel})');
+
+    if (config.isBuiltIn) {
+      return _audioChatZhipu(config, audio, prompt);
+    }
+    return _audioChatOpenAI(config, audio, prompt);
+  }
+
   /// 验证当前文本服务商配置是否可用
   static Future<(bool success, String? error)> validateConfig({
     String? logTag,
@@ -824,10 +864,13 @@ class AIProviderFactory {
   /// 验证语音转文字能力
   static Future<(bool success, String? error)> validateSpeechCapability(
     AIServiceProviderConfig config, {
+    required AIAudioMode mode,
     String? logTag,
   }) async {
     final tag = logTag ?? 'AIFactory';
-    logger.info(tag, '验证语音能力: ${config.name}');
+    final isMultimodal = mode == AIAudioMode.multimodalChat;
+    logger.info(tag,
+        '验证语音能力: ${config.name} (模式: ${isMultimodal ? "多模态" : "传统转写"})');
     logger.debug(tag, '  Base URL: ${config.baseUrl}');
     logger.debug(tag, '  模型: ${config.audioModel}');
 
@@ -847,7 +890,14 @@ class AIProviderFactory {
       await testAudio.writeAsBytes(testAudioBytes);
 
       try {
-        if (config.isBuiltIn) {
+        if (isMultimodal) {
+          const testPrompt = '请识别这段音频的内容。若无有效语音，回复「无内容」。';
+          if (config.isBuiltIn) {
+            await _audioChatZhipu(config, testAudio, testPrompt);
+          } else {
+            await _audioChatOpenAI(config, testAudio, testPrompt);
+          }
+        } else if (config.isBuiltIn) {
           await _speechToTextZhipu(config, testAudio);
         } else {
           await _speechToTextOpenAI(config, testAudio);
@@ -1049,12 +1099,17 @@ class AIProviderFactory {
   /// 推理模型:temperature 等被锁 → 摘掉 → 用模型默认值,通过。
   static Future<Response<dynamic>> _postChatCompletions(
     Dio dio,
-    Map<String, dynamic> body,
-  ) async {
+    Map<String, dynamic> body, {
+    Options? options,
+  }) async {
     var payload = Map<String, dynamic>.of(body);
     for (var attempt = 0;; attempt++) {
       try {
-        return await dio.post('/chat/completions', data: payload);
+        return await dio.post(
+          '/chat/completions',
+          data: payload,
+          options: options,
+        );
       } on DioException catch (e) {
         final param = rejectedChatParam(
           payload,
@@ -1083,14 +1138,21 @@ class AIProviderFactory {
     }
     messages.add({'role': 'user', 'content': prompt});
 
-    logger.debug('AIFactory', '请求: ${config.baseUrl}/chat/completions');
-
     try {
-      final response = await _postChatCompletions(dio, {
+      final body = <String, dynamic>{
         'model': config.textModel,
         'messages': messages,
         'temperature': temperature,
-      });
+      };
+      await _mergeReasoningIntoBody(body);
+      final reasoningEffort = body['reasoning_effort'];
+      logger.debug(
+        'AIFactory',
+        '请求(文本对话): ${config.baseUrl}/chat/completions'
+        '${reasoningEffort != null ? ', reasoning_effort=$reasoningEffort' : ''}',
+      );
+
+      final response = await _postChatCompletions(dio, body);
 
       return _extractChatContent(response, capability: '文本');
     } on DioException catch (e) {
@@ -1108,29 +1170,21 @@ class AIProviderFactory {
     final imageBytes = await image.readAsBytes();
     final base64Image = base64Encode(imageBytes);
 
-    logger.debug('AIFactory', '请求: ${config.baseUrl}/chat/completions');
+    final body = buildOpenAiVisionChatBody(
+      visionModel: config.visionModel,
+      prompt: prompt,
+      base64Image: base64Image,
+    );
+    await _mergeReasoningIntoBody(body);
+    final reasoningEffort = body['reasoning_effort'];
+    logger.debug(
+      'AIFactory',
+      '请求(图片理解): ${config.baseUrl}/chat/completions'
+      '${reasoningEffort != null ? ', reasoning_effort=$reasoningEffort' : ''}',
+    );
 
     try {
-      final response = await dio.post(
-        '/chat/completions',
-        data: {
-          'model': config.visionModel,
-          'messages': [
-            {
-              'role': 'user',
-              'content': [
-                {'type': 'text', 'text': prompt},
-                {
-                  'type': 'image_url',
-                  'image_url': {
-                    'url': 'data:image/jpeg;base64,$base64Image',
-                  },
-                },
-              ],
-            },
-          ],
-        },
-      );
+      final response = await _postChatCompletions(dio, body);
 
       return _extractChatContent(response, capability: '视觉');
     } on DioException catch (e) {
@@ -1206,6 +1260,183 @@ class AIProviderFactory {
       throw AIException('服务商返回了无法识别的$capability响应（缺少消息内容）');
     }
     return message['content'] as String;
+  }
+
+  static Options get _openAiChatTimeoutOptions => Options(
+        sendTimeout: const Duration(seconds: 120),
+        receiveTimeout: const Duration(seconds: 120),
+      );
+
+  /// 构建 OpenAI 兼容图片理解 chat/completions 请求体（不含深度思考字段）。
+  @visibleForTesting
+  static Map<String, dynamic> buildOpenAiVisionChatBody({
+    required String visionModel,
+    required String prompt,
+    required String base64Image,
+  }) {
+    return {
+      'model': visionModel,
+      'messages': [
+        {
+          'role': 'user',
+          'content': [
+            {'type': 'text', 'text': prompt},
+            {
+              'type': 'image_url',
+              'image_url': {
+                'url': 'data:image/jpeg;base64,$base64Image',
+              },
+            },
+          ],
+        },
+      ],
+    };
+  }
+
+  /// 从 OpenAI 兼容 chat/completions 响应中解析 message.content 文本。
+  @visibleForTesting
+  static String parseOpenAiChatContent(dynamic data) {
+    if (data is! Map<String, dynamic>) {
+      throw AIException('chat/completions 响应格式无效');
+    }
+    final choices = data['choices'];
+    if (choices is! List || choices.isEmpty) {
+      throw AIException('chat/completions 响应缺少 choices');
+    }
+    final first = choices.first;
+    if (first is! Map<String, dynamic>) {
+      throw AIException('chat/completions 响应 choices 项无效');
+    }
+    final message = first['message'];
+    if (message is! Map<String, dynamic>) {
+      throw AIException('chat/completions 响应缺少 message');
+    }
+    final content = message['content'];
+    if (content is String) {
+      final trimmed = content.trim();
+      if (trimmed.isEmpty) {
+        throw AIException('chat/completions 响应 content 为空');
+      }
+      return trimmed;
+    }
+    if (content is List) {
+      final buffer = StringBuffer();
+      for (final part in content) {
+        if (part is Map<String, dynamic>) {
+          final text = part['text'];
+          if (text is String && text.isNotEmpty) {
+            buffer.write(text);
+          }
+        }
+      }
+      final joined = buffer.toString().trim();
+      if (joined.isEmpty) {
+        throw AIException('chat/completions 响应 content 为空');
+      }
+      return joined;
+    }
+    throw AIException('chat/completions 响应 content 为空');
+  }
+
+  static Future<void> _mergeReasoningIntoBody(
+    Map<String, dynamic> body,
+  ) async {
+    final level = await ReasoningAdapter.loadLevelFromPrefs();
+    final extra = ReasoningAdapter.buildExtraBody(level: level);
+    if (extra != null) {
+      body.addAll(extra);
+    }
+  }
+
+  /// 供单测验证 vision/chat 等路径会合并全局深度思考配置。
+  @visibleForTesting
+  static Future<void> mergeReasoningIntoBodyForTest(
+    Map<String, dynamic> body,
+  ) =>
+      _mergeReasoningIntoBody(body);
+
+  static Future<String> _audioChatZhipu(
+    AIServiceProviderConfig config,
+    File audio,
+    String prompt,
+  ) async {
+    final provider = ZhipuGLMProvider(
+      apiKey: config.apiKey,
+      model: config.audioModel,
+      audioFile: audio,
+      receiveTimeout: const Duration(seconds: 120),
+      sendTimeout: const Duration(seconds: 120),
+    );
+
+    final task = _SimpleTask(prompt);
+    final result = await provider.execute(task);
+
+    if (!result.success) {
+      throw AIException(result.error ?? '智谱GLM语音理解失败');
+    }
+
+    return result.data!.trim();
+  }
+
+  /// OpenAI 兼容多模态：chat/completions + input_audio。
+  static Future<String> _audioChatOpenAI(
+    AIServiceProviderConfig config,
+    File audio,
+    String prompt,
+  ) async {
+    final dio = _getDio(config);
+
+    final audioBytes = await audio.readAsBytes();
+    final base64Audio = base64Encode(audioBytes);
+    final format = audioFormatForPath(audio.path);
+
+    logger.debug('AIFactory',
+        '请求(多模态语音): ${config.baseUrl}/chat/completions, format=$format');
+
+    try {
+      final body = <String, dynamic>{
+        'model': config.audioModel,
+        'messages': [
+          {
+            'role': 'user',
+            'content': [
+              {'type': 'text', 'text': prompt},
+              {
+                'type': 'input_audio',
+                'input_audio': {
+                  'data': base64Audio,
+                  'format': format,
+                },
+              },
+            ],
+          },
+        ],
+      };
+      await _mergeReasoningIntoBody(body);
+
+      final response = await _postChatCompletions(
+        dio,
+        body,
+        options: _openAiChatTimeoutOptions,
+      );
+
+      return parseOpenAiChatContent(response.data);
+    } on DioException catch (e) {
+      throw AIException(_extractDioError(e));
+    }
+  }
+
+  /// 由文件扩展名推断 input_audio 的 format。
+  @visibleForTesting
+  static String audioFormatForPath(String path) {
+    final ext = path.split('.').last.toLowerCase();
+    switch (ext) {
+      case 'mp3':
+        return 'mp3';
+      case 'wav':
+      default:
+        return 'wav';
+    }
   }
 
   /// 提取 Dio 错误信息

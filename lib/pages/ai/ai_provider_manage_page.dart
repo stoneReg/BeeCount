@@ -764,7 +764,11 @@ class _AIProviderEditPageState extends ConsumerState<AIProviderEditPage> {
 
     try {
       final config = _getCurrentConfig();
-      final (success, error) = await AIProviderFactory.validateSpeechCapability(config);
+      final mode = await AIProviderFactory.resolveAudioMode();
+      final (success, error) = await AIProviderFactory.validateSpeechCapability(
+        config,
+        mode: mode,
+      );
 
       if (mounted) {
         setState(() {
