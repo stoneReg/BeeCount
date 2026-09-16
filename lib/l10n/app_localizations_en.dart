@@ -7922,4 +7922,43 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aiReasoningTitle => 'Deep reasoning';
+
+  @override
+  String get txAuditActionCreate => 'Record added';
+
+  @override
+  String get txAuditActionDelete => 'Record deleted';
+
+  @override
+  String get txAuditActionUpdate => 'Record updated';
+
+  @override
+  String get txAuditDeleteDetailMissing => '(Bill details were not kept for this historical delete)';
+
+  @override
+  String get txAuditEmpty => 'No edit history yet';
+
+  @override
+  String get txAuditFieldAttribution => 'Source';
+
+  @override
+  String get txAuditFieldChanges => 'Changes';
+
+  @override
+  String get txAuditFieldType => 'Type';
+
+  @override
+  String get txAuditLoadFailed => 'Failed to load edit history';
+
+  @override
+  String get txAuditLoadMore => 'Load more';
+
+  @override
+  String get txAuditRecentSubtitle => 'View cloud transaction edit history';
+
+  @override
+  String get txAuditTitle => 'Edit history';
+
+  @override
+  String get txAuditViewHistory => 'Edit history';
 }

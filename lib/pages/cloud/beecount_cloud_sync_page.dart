@@ -13,6 +13,7 @@ import '../../cloud/sync/sync_engine.dart';
 import '../../services/system/logger_service.dart';
 import '../auth/login_page.dart';
 import '../settings/log_center_page.dart';
+import 'transaction_audit_page.dart';
 
 /// BeeCount Cloud 专属同步页
 ///
@@ -191,6 +192,33 @@ class _BeeCountCloudSyncPageState extends ConsumerState<BeeCountCloudSyncPage> {
                         // 与否(未登录 / 拉取失败 → 自动隐藏)。不在外层 gate user,
                         // 这样切换 cloud scheme 来回时,只要重新登录成功就会自动出现。
                         const SizedBox(height: 8),
+                        Consumer(
+                          builder: (context, ref, _) {
+                            final cloud =
+                                ref.watch(beecountCloudProviderInstance).valueOrNull;
+                            if (cloud == null) return const SizedBox.shrink();
+                            return Column(
+                              children: [
+                                SectionCard(
+                                  child: AppListTile(
+                                    leading: Icons.history,
+                                    title: l10n.txAuditTitle,
+                                    subtitle: l10n.txAuditRecentSubtitle,
+                                    onTap: () {
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (_) =>
+                                              const TransactionAuditPage(),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                              ],
+                            );
+                          },
+                        ),
                         const _TwoFactorStatusRow(),
                         const SizedBox(height: 8),
                         // Section 2: 同步状态(深度检测结果)

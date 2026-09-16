@@ -7916,6 +7916,45 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get aiReasoningTitle => '深度思考';
+
+  @override
+  String get txAuditActionCreate => '新增记录';
+
+  @override
+  String get txAuditActionDelete => '删除记录';
+
+  @override
+  String get txAuditActionUpdate => '修改记录';
+
+  @override
+  String get txAuditDeleteDetailMissing => '（历史删除记录未留存账单详情）';
+
+  @override
+  String get txAuditEmpty => '暂无修改记录';
+
+  @override
+  String get txAuditFieldAttribution => '归属';
+
+  @override
+  String get txAuditFieldChanges => '修改内容';
+
+  @override
+  String get txAuditFieldType => '类型';
+
+  @override
+  String get txAuditLoadFailed => '加载修改记录失败';
+
+  @override
+  String get txAuditLoadMore => '加载更多';
+
+  @override
+  String get txAuditRecentSubtitle => '查看云端账单修改历史';
+
+  @override
+  String get txAuditTitle => '修改记录';
+
+  @override
+  String get txAuditViewHistory => '修改记录';
 }
 
 /// The translations for Chinese, as used in Taiwan (`zh_TW`).
