@@ -17,11 +17,15 @@ import '../transaction/search_page.dart';
 import '../ai/ai_chat_page.dart';
 import '../../l10n/app_localizations.dart';
 import '../../services/system/logger_service.dart';
+import '../../services/system/update_service.dart';
+import '../../services/update/update_dialogs.dart';
+import '../../services/update/update_result.dart';
 import '../../utils/format_utils.dart';
 import '../../utils/month_range.dart';
 import '../../services/export/share_poster_service.dart';
 import '../report/annual_report_page.dart';
 import '../calendar/calendar_page.dart';
+import '../cloud/transaction_audit_page.dart';
 import '../../widgets/biz/ledger_picker_sheet.dart';
 import '../../widgets/biz/home_budget_summary.dart';
 import '../../widgets/ai/agent_entry_card.dart';
@@ -192,6 +196,150 @@ class _HomePageState extends ConsumerState<HomePage> {
     _transactionListKey.currentState?.switchToStreamMode();
     Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => const AIChatPage()),
+    );
+  }
+
+  /// 关闭新版本横幅：记住本版本，同版本不再提示（#390）。
+  Future<void> _dismissUpdateBanner(AvailableUpdate update) async {
+    await UpdateService.dismissAvailableUpdate(ref, update);
+  }
+
+  /// 点击「更新」：用静默检查缓存的版本信息弹出确认框，再走下载安装流程。
+  Future<void> _onUpdateBannerAction() async {
+    final update = ref.read(availableUpdateProvider);
+    if (update == null || !mounted) return;
+
+    final shouldDownload = await UpdateDialogs.showDownloadConfirmDialog(
+      context,
+      update.version,
+      update.releaseNotes,
+    );
+    if (!shouldDownload || !mounted) return;
+
+    ref.read(checkUpdateLoadingProvider.notifier).state = true;
+    try {
+      final downloadResult = await UpdateService.downloadAndInstallUpdate(
+        context,
+        update.downloadUrl,
+        onProgress: (progress, status) {
+          if (status.isEmpty) {
+            ref.read(updateProgressProvider.notifier).state =
+                UpdateProgress.idle();
+          } else {
+            ref.read(updateProgressProvider.notifier).state =
+                UpdateProgress.active(progress, status);
+          }
+        },
+      );
+      if (!mounted) return;
+      if (!downloadResult.success &&
+          downloadResult.type != UpdateResultType.userCancelled &&
+          downloadResult.message != null) {
+        await UpdateDialogs.showDownloadErrorWithFallback(
+          context,
+          downloadResult.message!,
+        );
+      }
+    } finally {
+      if (mounted) {
+        ref.read(checkUpdateLoadingProvider.notifier).state = false;
+        ref.read(updateProgressProvider.notifier).state = UpdateProgress.idle();
+        // 本会话内清掉横幅，避免重复打扰（关闭 X 才会跨会话记住）
+        ref.read(availableUpdateProvider.notifier).state = null;
+      }
+    }
+  }
+
+  /// 构建「发现新版本」轻量横幅（复用预算引导卡片样式）。
+  Widget _buildUpdateAvailableCard(
+    BuildContext context,
+    AvailableUpdate update,
+  ) {
+    final l10n = AppLocalizations.of(context);
+    final primaryColor = ref.watch(primaryColorProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(12, 4, 12, 8),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        boxShadow: isDark
+            ? null
+            : [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Stack(
+          children: [
+            Positioned(
+              left: 0,
+              top: 0,
+              bottom: 0,
+              child: Container(
+                width: 4,
+                color: primaryColor,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.system_update_alt_rounded,
+                          color: primaryColor,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            l10n.updateAvailableBanner(update.version),
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: isDark ? Colors.white70 : Colors.black54,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  GestureDetector(
+                    onTap: _onUpdateBannerAction,
+                    child: Text(
+                      l10n.updateAvailableAction,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: primaryColor,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  GestureDetector(
+                    onTap: () => _dismissUpdateBanner(update),
+                    behavior: HitTestBehavior.opaque,
+                    child: Icon(
+                      Icons.close,
+                      size: 18,
+                      color: isDark ? Colors.white38 : Colors.black26,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -867,6 +1015,33 @@ class _HomePageState extends ConsumerState<HomePage> {
                           ),
                         ),
                         // 右侧操作按钮
+                        Consumer(
+                          builder: (context, ref, _) {
+                            final cloud =
+                                ref.watch(beecountCloudProviderInstance).valueOrNull;
+                            if (cloud == null) return const SizedBox.shrink();
+                            return IconButton(
+                              tooltip: AppLocalizations.of(context).txAuditViewHistory,
+                              padding: const EdgeInsets.all(8),
+                              style: IconButton.styleFrom(
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                minimumSize: Size.zero,
+                              ),
+                              onPressed: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => const TransactionAuditPage(),
+                                  ),
+                                );
+                              },
+                              icon: Icon(
+                                Icons.history,
+                                size: 20,
+                                color: Theme.of(context).iconTheme.color,
+                              ),
+                            );
+                          },
+                        ),
                         if (aiEnabled)
                           AgentEntryButton(
                             tooltip: AppLocalizations.of(context).aiChatTitle,
@@ -1005,6 +1180,12 @@ class _HomePageState extends ConsumerState<HomePage> {
             );
           }),
           const SizedBox(height: 0),
+          // #390：发现新版本时的轻量横幅（可关闭，同版本不再提示）
+          Consumer(builder: (context, ref, _) {
+            final update = ref.watch(availableUpdateProvider);
+            if (update == null) return const SizedBox.shrink();
+            return _buildUpdateAvailableCard(context, update);
+          }),
           // 月初提醒卡片
           if (_showLastMonthReminder) _buildLastMonthReminderCard(context),
           // 年度账单提醒卡片（12月15日 - 次年1月31日）

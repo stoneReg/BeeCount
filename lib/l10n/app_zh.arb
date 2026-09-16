@@ -4052,5 +4052,14 @@
   "txAuditLoadMore": "加载更多",
   "txAuditRecentSubtitle": "查看云端账单修改历史",
   "txAuditTitle": "修改记录",
-  "txAuditViewHistory": "修改记录"
+  "txAuditViewHistory": "修改记录",
+  "updateAvailableAction": "更新",
+  "updateAvailableBanner": "发现新版本 {version}",
+  "@updateAvailableBanner": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  }
 }

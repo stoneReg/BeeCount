@@ -3533,5 +3533,14 @@
   "aiReasoningLow": "低",
   "aiReasoningMedium": "中",
   "aiReasoningOff": "關閉",
-  "aiReasoningTitle": "深度思考"
+  "aiReasoningTitle": "深度思考",
+  "updateAvailableAction": "更新",
+  "updateAvailableBanner": "發現新版本 {version}",
+  "@updateAvailableBanner": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  }
 }
