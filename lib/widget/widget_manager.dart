@@ -186,8 +186,12 @@ class WidgetManager {
     String totalAssetsLabel = '总资产',
     String totalLiabilitiesLabel = '总负债',
     String noAccountsLabel = '暂无账户',
-    // 快速记账「记一笔」按钮文案,对应 arb key `widgetQuickAddLabel`。
-    String quickAddLabel = '记一笔',
+    // 快速记账四格文案:语音 / AI / 拍照 / 记一笔。
+    String voiceLabel = '语音记账',
+    String aiLabel = 'AI小助手',
+    String cameraLabel = '拍照记账',
+    // 综合仪表盘底栏「记一笔」文案,对应 arb key `widgetQuickAddLabel`。
+    String manualLabel = '记一笔',
     // 预算进度(budget)视图文案。budgetLabel/budgetUsedLabel 文本与语义都
     // 和预算页已有的 budgetMonthlyBudget/budgetUsed 完全一致,直接复用;
     // budgetTotalLabel/budgetRemainingLabel 是卡片专用短词(budget_page.dart
@@ -275,7 +279,10 @@ class WidgetManager {
             totalAssetsLabel: totalAssetsLabel,
             totalLiabilitiesLabel: totalLiabilitiesLabel,
             noAccountsLabel: noAccountsLabel,
-            quickAddLabel: quickAddLabel,
+            voiceLabel: voiceLabel,
+            aiLabel: aiLabel,
+            cameraLabel: cameraLabel,
+            manualLabel: manualLabel,
             budgetLabel: budgetLabel,
             budgetUsedLabel: budgetUsedLabel,
             budgetTotalLabel: budgetTotalLabel,
@@ -366,7 +373,10 @@ class WidgetManager {
       totalAssetsLabel: l10n.totalAssets,
       totalLiabilitiesLabel: l10n.totalLiabilities,
       noAccountsLabel: l10n.widgetNoAccounts,
-      quickAddLabel: l10n.widgetQuickAddLabel,
+      voiceLabel: l10n.quickActionVoice,
+      aiLabel: l10n.aiSettingsTitle,
+      cameraLabel: l10n.quickActionCamera,
+      manualLabel: l10n.widgetQuickAddLabel,
       budgetLabel: l10n.budgetMonthlyBudget,
       budgetUsedLabel: l10n.budgetUsed,
       budgetTotalLabel: l10n.widgetBudgetTotal,
@@ -415,7 +425,10 @@ class WidgetManager {
     required String totalAssetsLabel,
     required String totalLiabilitiesLabel,
     required String noAccountsLabel,
-    required String quickAddLabel,
+    required String voiceLabel,
+    required String aiLabel,
+    required String cameraLabel,
+    required String manualLabel,
     required String budgetLabel,
     required String budgetUsedLabel,
     required String budgetTotalLabel,
@@ -461,7 +474,10 @@ class WidgetManager {
           batch: batch,
           themeColor: themeColor,
           dark: dark,
-          addLabel: quickAddLabel,
+          voiceLabel: voiceLabel,
+          aiLabel: aiLabel,
+          cameraLabel: cameraLabel,
+          manualLabel: manualLabel,
           titleLabel: quickAddTitleLabel,
         );
         return;
@@ -503,7 +519,8 @@ class WidgetManager {
           recentLabel: dashboardRecentLabel,
           uncategorizedLabel: uncategorizedLabel,
           noTransactionsLabel: noTransactionsLabel,
-          quickAddLabel: quickAddLabel,
+          voiceLabel: voiceLabel,
+          manualLabel: manualLabel,
           titleLabel: dashboardTitleLabel,
         );
         return;
@@ -649,19 +666,21 @@ class WidgetManager {
     required WidgetGatherBatch batch,
     required Color themeColor,
     required bool dark,
-    required String addLabel,
+    required String voiceLabel,
+    required String aiLabel,
+    required String cameraLabel,
+    required String manualLabel,
     required String titleLabel,
   }) async {
-    // 批次内按最大需求取 7 个(medium 2×4 网格用满);small 由 QuickAddView
-    // 内部截断到 3 个 + 补位(见 WidgetGatherBatch.quickAddCategories 文档)。
-    final categories = await batch.quickAddCategories();
-
+    final compact = spec.size == HWSize.small;
     final view = QuickAddView(
       size: spec.size,
-      categories: categories,
       themeColor: themeColor,
       dark: dark,
-      addLabel: addLabel,
+      voiceLabel: compact ? '语音' : voiceLabel,
+      aiLabel: compact ? 'AI' : aiLabel,
+      cameraLabel: compact ? '拍照' : cameraLabel,
+      manualLabel: manualLabel,
       titleLabel: titleLabel,
       width: spec.logicalSize.width,
       height: spec.logicalSize.height,
@@ -775,7 +794,8 @@ class WidgetManager {
     required String recentLabel,
     required String uncategorizedLabel,
     required String noTransactionsLabel,
-    required String quickAddLabel,
+    required String voiceLabel,
+    required String manualLabel,
     required String titleLabel,
   }) async {
     // 组合数据全部来自批次缓存(glance/趋势/最近交易/常用分类若已被其它 spec
@@ -798,7 +818,8 @@ class WidgetManager {
       recentLabel: recentLabel,
       uncategorizedLabel: uncategorizedLabel,
       noTransactionsLabel: noTransactionsLabel,
-      quickAddLabel: quickAddLabel,
+      voiceLabel: voiceLabel,
+      manualLabel: manualLabel,
       titleLabel: titleLabel,
       width: spec.logicalSize.width,
       height: spec.logicalSize.height,
