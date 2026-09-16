@@ -29,6 +29,7 @@ import 'pages/ai/ai_chat_page.dart';
 import 'services/platform/app_link_service.dart';
 import 'services/platform/quick_actions_service.dart';
 import 'services/system/logger_service.dart';
+import 'services/system/update_service.dart';
 import 'services/security/app_lock_service.dart';
 import 'providers/security_providers.dart';
 import 'styles/tokens.dart';
@@ -105,6 +106,8 @@ class _BeeAppState extends ConsumerState<BeeApp>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _setupAppLinkListener();
       _setupQuickActions();
+      // #390：静默检查，有新版本时通过首页横幅轻量提示（非启动弹窗）
+      UpdateService.scheduleStartupUpdateCheck(ProviderScope.containerOf(context));
     });
   }
 
