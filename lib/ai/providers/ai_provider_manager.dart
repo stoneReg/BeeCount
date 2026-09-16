@@ -270,7 +270,37 @@ class AIProviderManager {
       snapshot['voice_silence_timeout_ms'] =
           prefs.getInt(AIConstants.keyVoiceSilenceTimeoutMs);
     }
+    if (prefs.containsKey(AIConstants.keyAudioMode)) {
+      snapshot['audio_mode'] = prefs.getString(AIConstants.keyAudioMode);
+    }
+    if (prefs.containsKey(AIConstants.keyAiReasoningLevel)) {
+      snapshot['ai_reasoning_level'] =
+          prefs.getString(AIConstants.keyAiReasoningLevel);
+    }
     return snapshot;
+  }
+
+  /// 推送前与 server 已有 ai_config 合并 mobile-only 字段，避免整包替换抹掉他机配置。
+  static const _mobileOnlySyncFieldKeys = [
+    'voice_trigger_mode',
+    'voice_silence_timeout_ms',
+    'audio_mode',
+    'ai_reasoning_level',
+  ];
+
+  /// 本地 snapshot 缺失的 mobile-only 字段从 server 补回（server 有则保留）。
+  static Map<String, dynamic> mergeSnapshotWithServerAiConfig(
+    Map<String, dynamic> local,
+    Map<String, dynamic>? server,
+  ) {
+    final merged = Map<String, dynamic>.from(local);
+    final serverMap = server ?? {};
+    for (final key in _mobileOnlySyncFieldKeys) {
+      if (!merged.containsKey(key) && serverMap.containsKey(key)) {
+        merged[key] = serverMap[key];
+      }
+    }
+    return merged;
   }
 
   /// 把 server /profile/me 返回的 ai_config dict 落到本地 SharedPreferences。
@@ -332,7 +362,55 @@ class AIProviderManager {
       await prefs.setInt(
           AIConstants.keyVoiceSilenceTimeoutMs, voiceSilenceTimeout);
     }
+
+    final audioMode = config['audio_mode'] as String?;
+    if (audioMode != null &&
+        audioMode.isNotEmpty &&
+        prefs.getString(AIConstants.keyAudioMode) != audioMode) {
+      await prefs.setString(AIConstants.keyAudioMode, audioMode);
+    }
+
+    final reasoningLevel = config['ai_reasoning_level'] as String?;
+    if (reasoningLevel != null &&
+        reasoningLevel.isNotEmpty &&
+        prefs.getString(AIConstants.keyAiReasoningLevel) != reasoningLevel) {
+      await prefs.setString(AIConstants.keyAiReasoningLevel, reasoningLevel);
+    }
+
+    await _migrateLegacyAudioModeIfNeeded(prefs, config);
     logger.info(_tag, 'AI 配置已从 server 应用到本地');
+  }
+
+  /// 本机从未配置 audio_mode 时，从 server 顶层字段或旧版 per-provider audioMode 迁移。
+  static Future<void> _migrateLegacyAudioModeIfNeeded(
+    SharedPreferences prefs,
+    Map<String, dynamic> config,
+  ) async {
+    if (prefs.containsKey(AIConstants.keyAudioMode)) return;
+
+    final topLevel = config['audio_mode'] as String?;
+    if (topLevel != null && topLevel.isNotEmpty) {
+      await prefs.setString(AIConstants.keyAudioMode, topLevel);
+      return;
+    }
+
+    final rawProviders = config['providers'];
+    final rawBinding = config['binding'];
+    if (rawProviders is! List || rawBinding is! Map) return;
+
+    final speechId = rawBinding['speechProviderId'] as String?;
+    if (speechId == null || speechId.isEmpty) return;
+
+    for (final item in rawProviders) {
+      if (item is! Map) continue;
+      if (item['id'] != speechId) continue;
+      final legacy = item['audioMode'] as String?;
+      if (legacy != null && legacy.isNotEmpty) {
+        await prefs.setString(AIConstants.keyAudioMode, legacy);
+        logger.info(_tag, '已从旧版 provider.audioMode 迁移全局 audio_mode: $legacy');
+      }
+      return;
+    }
   }
 
   /// 设置单个能力的服务商

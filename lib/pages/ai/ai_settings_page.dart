@@ -7,6 +7,9 @@ import '../../styles/tokens.dart';
 import '../../utils/ui_scale_extensions.dart';
 import '../../providers/theme_providers.dart';
 import '../../providers/ai_config_providers.dart';
+import '../../providers/audio_mode_providers.dart';
+import '../../providers/ai_reasoning_providers.dart';
+import '../../ai/providers/ai_reasoning_adapter.dart';
 import '../../l10n/app_localizations.dart';
 import '../../ai/providers/ai_provider_config.dart';
 import '../../ai/providers/ai_provider_manager.dart';
@@ -32,6 +35,8 @@ class _AISettingsPageState extends ConsumerState<AISettingsPage> {
     // 存量用户:升级前已开启 AI 但从未同意第三方数据共享 → 进入设置页补弹一次。
     // 其它直接使用 AI 的入口由 AIProviderFactory 的二道关兜底(未同意即中止)。
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await ref.read(audioModeSettingsProvider.notifier).ensureLoaded();
+      await ref.read(aiReasoningSettingsProvider.notifier).ensureLoaded();
       if (!mounted) return;
       final enabled = ref.read(aiConfigProvider).enabled;
       if (!enabled) return;
@@ -254,7 +259,83 @@ class _AISettingsPageState extends ConsumerState<AISettingsPage> {
           providers: providers,
           capabilityType: AICapabilityType.speech,
         ),
+        BeeTokens.cardDivider(context),
+        _buildAudioModeTile(),
       ],
+    );
+  }
+
+  /// 语音识别模式（传统转写 / 多模态理解），全局设置。
+  Widget _buildAudioModeTile() {
+    final l10n = AppLocalizations.of(context);
+    final primaryColor = ref.watch(primaryColorProvider);
+    final mode = ref.watch(audioModeSettingsProvider);
+    final isMultimodal = mode == AIAudioMode.multimodalChat;
+
+    return ListTile(
+      dense: true,
+      leading: Icon(Icons.graphic_eq, size: 22, color: primaryColor),
+      title: Text(l10n.aiAudioModeTitle, style: const TextStyle(fontSize: 14)),
+      subtitle: Text(
+        isMultimodal
+            ? l10n.aiAudioModeMultimodal
+            : l10n.aiAudioModeTranscription,
+        style: const TextStyle(fontSize: 12),
+      ),
+      trailing: const Icon(Icons.chevron_right, size: 18),
+      onTap: _showAudioModeDialog,
+    );
+  }
+
+  void _showAudioModeDialog() {
+    final l10n = AppLocalizations.of(context);
+    final primaryColor = ref.read(primaryColorProvider);
+    final currentMode = ref.read(audioModeSettingsProvider);
+    final notifier = ref.read(audioModeSettingsProvider.notifier);
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.aiAudioModeTitle),
+        contentPadding: const EdgeInsets.symmetric(vertical: 8),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (final mode in AIAudioMode.values)
+              RadioListTile<AIAudioMode>(
+                value: mode,
+                groupValue: currentMode,
+                activeColor: primaryColor,
+                title: Text(
+                  mode == AIAudioMode.multimodalChat
+                      ? l10n.aiAudioModeMultimodal
+                      : l10n.aiAudioModeTranscription,
+                  style: const TextStyle(fontSize: 14),
+                ),
+                subtitle: Text(
+                  mode == AIAudioMode.multimodalChat
+                      ? l10n.aiAudioModeMultimodalDesc
+                      : l10n.aiAudioModeTranscriptionDesc,
+                  style: const TextStyle(fontSize: 12),
+                ),
+                onChanged: (value) async {
+                  if (value == null) return;
+                  Navigator.pop(dialogContext);
+                  await notifier.setMode(value);
+                  if (mounted) {
+                    showToast(context, l10n.commonSaved);
+                  }
+                },
+              ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(l10n.commonCancel),
+          ),
+        ],
+      ),
     );
   }
 
@@ -385,6 +466,8 @@ class _AISettingsPageState extends ConsumerState<AISettingsPage> {
     final l10n = AppLocalizations.of(context);
     final primaryColor = ref.watch(primaryColorProvider);
     final notifier = ref.read(aiConfigProvider.notifier);
+    final reasoning = ref.watch(aiReasoningSettingsProvider);
+    final reasoningNotifier = ref.read(aiReasoningSettingsProvider.notifier);
 
     return SectionCard(
       margin: EdgeInsets.zero,
@@ -499,6 +582,45 @@ class _AISettingsPageState extends ConsumerState<AISettingsPage> {
 
             BeeTokens.cardDivider(context),
 
+            // === 深度思考 ===
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+              child: Row(
+                children: [
+                  Icon(Icons.psychology_outlined,
+                      size: 18, color: BeeTokens.textSecondary(context)),
+                  const SizedBox(width: 8),
+                  Text(
+                    l10n.aiReasoningTitle,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: BeeTokens.textSecondary(context),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            for (final level in AIReasoningLevel.values)
+              RadioListTile<AIReasoningLevel>(
+                value: level,
+                groupValue: reasoning.level,
+                onChanged: (value) async {
+                  if (value == null) return;
+                  await reasoningNotifier.save(value);
+                  if (mounted) {
+                    showToast(context, l10n.commonSaved);
+                  }
+                },
+                title: Text(_reasoningLevelLabel(l10n, level),
+                    style: const TextStyle(fontSize: 14)),
+                activeColor: primaryColor,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                dense: true,
+              ),
+
+            BeeTokens.cardDivider(context),
+
             // 历史「本地模型(训练中)」占位 entry 已删除(2026-05-24)。本地 AI 视觉
             // 未来走 Apple Foundation Models / Gemini Nano(平台原生 SDK,非 tflite),
             // 详见 .docs/on-device-vlm/README.md。
@@ -525,5 +647,18 @@ class _AISettingsPageState extends ConsumerState<AISettingsPage> {
         ),
       ),
     );
+  }
+
+  String _reasoningLevelLabel(AppLocalizations l10n, AIReasoningLevel level) {
+    switch (level) {
+      case AIReasoningLevel.off:
+        return l10n.aiReasoningOff;
+      case AIReasoningLevel.low:
+        return l10n.aiReasoningLow;
+      case AIReasoningLevel.medium:
+        return l10n.aiReasoningMedium;
+      case AIReasoningLevel.high:
+        return l10n.aiReasoningHigh;
+    }
   }
 }
