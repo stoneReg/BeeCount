@@ -8681,4 +8681,168 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get transactionReceiptShareFailed => 'Unable to share. Please try again.';
+
+  @override
+  String get adjustmentTransaction => 'Valuation Adjustment';
+
+  @override
+  String get cloudCollabDevicesPageTitle => 'Device Sessions';
+
+  @override
+  String get cloudCollabDevicesPageSubtitle => 'Manage active devices';
+
+  @override
+  String get cloudCollabDevicesViewAllSessions => 'Show all sessions';
+
+  @override
+  String get cloudCollabDevicesViewModeHint => 'Default view shows deduped devices active in the last 30 days.';
+
+  @override
+  String get cloudCollabNoDevices => 'No active devices';
+
+  @override
+  String get cloudCollabUnknownDeviceName => 'Unknown Device';
+
+  @override
+  String get cloudCollabDeviceCurrentTag => 'Current Device';
+
+  @override
+  String get cloudCollabCurrentDeviceCannotRevoke => 'Current device cannot be revoked.';
+
+  @override
+  String cloudCollabDeviceAppVersion(String version) {
+    return 'App: $version';
+  }
+
+  @override
+  String cloudCollabDeviceOsVersion(String version) {
+    return 'OS: $version';
+  }
+
+  @override
+  String cloudCollabDeviceModel(String model) {
+    return 'Model: $model';
+  }
+
+  @override
+  String cloudCollabDeviceLastIp(String ip) {
+    return 'IP: $ip';
+  }
+
+  @override
+  String cloudCollabDeviceSessionCount(String count) {
+    return 'Sessions: $count';
+  }
+
+  @override
+  String cloudCollabDeviceLastSeen(String time) {
+    return 'Last seen: $time';
+  }
+
+  @override
+  String cloudCollabDeviceCreatedAt(String time) {
+    return 'Created: $time';
+  }
+
+  @override
+  String get cloudCollabDeviceRevokeTitle => 'Revoke Device';
+
+  @override
+  String cloudCollabDeviceRevokeMessage(String name, String id) {
+    return 'Revoke device $name ($id)?';
+  }
+
+  @override
+  String cloudCollabDeviceRevokeMultipleMessage(String name, String count) {
+    return 'Revoke $count sessions for device $name?';
+  }
+
+  @override
+  String get cloudCollabDeviceRevoked => 'Device revoked';
+
+  @override
+  String get cloudCollabUnavailableMessage => 'Cloud sync is unavailable.';
+
+  @override
+  String get cloudCollabScopeDeniedHint => 'Server has not enabled ALLOW_APP_RW_SCOPES, so device sessions are unavailable.';
+
+  @override
+  String get cloudCollabScopeDeniedAction => 'Set ALLOW_APP_RW_SCOPES=true in server .env, restart the service, then sign in again.';
+
+  @override
+  String get aiAudioModeMultimodal => 'Multimodal understanding';
+
+  @override
+  String get aiAudioModeMultimodalDesc => 'Send audio directly to the model to reason and output bills; more robust to accents, higher cost (requires audio-input support)';
+
+  @override
+  String get aiAudioModeTitle => 'Voice recognition mode';
+
+  @override
+  String get aiAudioModeTranscription => 'Transcription (STT)';
+
+  @override
+  String get aiAudioModeTranscriptionDesc => 'Transcribe first, then extract; cheaper and faster';
+
+  @override
+  String get aiReasoningHigh => 'High';
+
+  @override
+  String get aiReasoningLow => 'Low';
+
+  @override
+  String get aiReasoningMedium => 'Medium';
+
+  @override
+  String get aiReasoningOff => 'Off';
+
+  @override
+  String get aiReasoningTitle => 'Deep reasoning';
+
+  @override
+  String get txAuditActionCreate => 'Record added';
+
+  @override
+  String get txAuditActionDelete => 'Record deleted';
+
+  @override
+  String get txAuditActionUpdate => 'Record updated';
+
+  @override
+  String get txAuditDeleteDetailMissing => '(Bill details were not kept for this historical delete)';
+
+  @override
+  String get txAuditEmpty => 'No edit history yet';
+
+  @override
+  String get txAuditFieldAttribution => 'Source';
+
+  @override
+  String get txAuditFieldChanges => 'Changes';
+
+  @override
+  String get txAuditFieldType => 'Type';
+
+  @override
+  String get txAuditLoadFailed => 'Failed to load edit history';
+
+  @override
+  String get txAuditLoadMore => 'Load more';
+
+  @override
+  String get txAuditRecentSubtitle => 'View cloud transaction edit history';
+
+  @override
+  String get txAuditTitle => 'Edit history';
+
+  @override
+  String get txAuditViewHistory => 'Edit history';
+
+  @override
+  String get updateAvailableAction => '업데이트';
+
+  @override
+  String updateAvailableBanner(String version) {
+    return '새 버전 $version 이용 가능';
+  }
 }

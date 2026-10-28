@@ -16321,6 +16321,294 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unable to share. Please try again.'**
   String get transactionReceiptShareFailed;
+
+  /// No description provided for @adjustmentTransaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Valuation Adjustment'**
+  String get adjustmentTransaction;
+
+  /// No description provided for @cloudCollabDevicesPageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Device Sessions'**
+  String get cloudCollabDevicesPageTitle;
+
+  /// No description provided for @cloudCollabDevicesPageSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage active devices'**
+  String get cloudCollabDevicesPageSubtitle;
+
+  /// No description provided for @cloudCollabDevicesViewAllSessions.
+  ///
+  /// In en, this message translates to:
+  /// **'Show all sessions'**
+  String get cloudCollabDevicesViewAllSessions;
+
+  /// No description provided for @cloudCollabDevicesViewModeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Default view shows deduped devices active in the last 30 days.'**
+  String get cloudCollabDevicesViewModeHint;
+
+  /// No description provided for @cloudCollabNoDevices.
+  ///
+  /// In en, this message translates to:
+  /// **'No active devices'**
+  String get cloudCollabNoDevices;
+
+  /// No description provided for @cloudCollabUnknownDeviceName.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown Device'**
+  String get cloudCollabUnknownDeviceName;
+
+  /// No description provided for @cloudCollabDeviceCurrentTag.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Device'**
+  String get cloudCollabDeviceCurrentTag;
+
+  /// No description provided for @cloudCollabCurrentDeviceCannotRevoke.
+  ///
+  /// In en, this message translates to:
+  /// **'Current device cannot be revoked.'**
+  String get cloudCollabCurrentDeviceCannotRevoke;
+
+  /// No description provided for @cloudCollabDeviceAppVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'App: {version}'**
+  String cloudCollabDeviceAppVersion(String version);
+
+  /// No description provided for @cloudCollabDeviceOsVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'OS: {version}'**
+  String cloudCollabDeviceOsVersion(String version);
+
+  /// No description provided for @cloudCollabDeviceModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Model: {model}'**
+  String cloudCollabDeviceModel(String model);
+
+  /// No description provided for @cloudCollabDeviceLastIp.
+  ///
+  /// In en, this message translates to:
+  /// **'IP: {ip}'**
+  String cloudCollabDeviceLastIp(String ip);
+
+  /// No description provided for @cloudCollabDeviceSessionCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Sessions: {count}'**
+  String cloudCollabDeviceSessionCount(String count);
+
+  /// No description provided for @cloudCollabDeviceLastSeen.
+  ///
+  /// In en, this message translates to:
+  /// **'Last seen: {time}'**
+  String cloudCollabDeviceLastSeen(String time);
+
+  /// No description provided for @cloudCollabDeviceCreatedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Created: {time}'**
+  String cloudCollabDeviceCreatedAt(String time);
+
+  /// No description provided for @cloudCollabDeviceRevokeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke Device'**
+  String get cloudCollabDeviceRevokeTitle;
+
+  /// No description provided for @cloudCollabDeviceRevokeMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke device {name} ({id})?'**
+  String cloudCollabDeviceRevokeMessage(String name, String id);
+
+  /// No description provided for @cloudCollabDeviceRevokeMultipleMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke {count} sessions for device {name}?'**
+  String cloudCollabDeviceRevokeMultipleMessage(String name, String count);
+
+  /// No description provided for @cloudCollabDeviceRevoked.
+  ///
+  /// In en, this message translates to:
+  /// **'Device revoked'**
+  String get cloudCollabDeviceRevoked;
+
+  /// No description provided for @cloudCollabUnavailableMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud sync is unavailable.'**
+  String get cloudCollabUnavailableMessage;
+
+  /// No description provided for @cloudCollabScopeDeniedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Server has not enabled ALLOW_APP_RW_SCOPES, so device sessions are unavailable.'**
+  String get cloudCollabScopeDeniedHint;
+
+  /// No description provided for @cloudCollabScopeDeniedAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Set ALLOW_APP_RW_SCOPES=true in server .env, restart the service, then sign in again.'**
+  String get cloudCollabScopeDeniedAction;
+
+  /// No description provided for @aiAudioModeMultimodal.
+  ///
+  /// In en, this message translates to:
+  /// **'Multimodal understanding'**
+  String get aiAudioModeMultimodal;
+
+  /// No description provided for @aiAudioModeMultimodalDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Send audio directly to the model to reason and output bills; more robust to accents, higher cost (requires audio-input support)'**
+  String get aiAudioModeMultimodalDesc;
+
+  /// No description provided for @aiAudioModeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice recognition mode'**
+  String get aiAudioModeTitle;
+
+  /// No description provided for @aiAudioModeTranscription.
+  ///
+  /// In en, this message translates to:
+  /// **'Transcription (STT)'**
+  String get aiAudioModeTranscription;
+
+  /// No description provided for @aiAudioModeTranscriptionDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Transcribe first, then extract; cheaper and faster'**
+  String get aiAudioModeTranscriptionDesc;
+
+  /// No description provided for @aiReasoningHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'High'**
+  String get aiReasoningHigh;
+
+  /// No description provided for @aiReasoningLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Low'**
+  String get aiReasoningLow;
+
+  /// No description provided for @aiReasoningMedium.
+  ///
+  /// In en, this message translates to:
+  /// **'Medium'**
+  String get aiReasoningMedium;
+
+  /// No description provided for @aiReasoningOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get aiReasoningOff;
+
+  /// No description provided for @aiReasoningTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Deep reasoning'**
+  String get aiReasoningTitle;
+
+  /// No description provided for @txAuditActionCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Record added'**
+  String get txAuditActionCreate;
+
+  /// No description provided for @txAuditActionDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Record deleted'**
+  String get txAuditActionDelete;
+
+  /// No description provided for @txAuditActionUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Record updated'**
+  String get txAuditActionUpdate;
+
+  /// No description provided for @txAuditDeleteDetailMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'(Bill details were not kept for this historical delete)'**
+  String get txAuditDeleteDetailMissing;
+
+  /// No description provided for @txAuditEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No edit history yet'**
+  String get txAuditEmpty;
+
+  /// No description provided for @txAuditFieldAttribution.
+  ///
+  /// In en, this message translates to:
+  /// **'Source'**
+  String get txAuditFieldAttribution;
+
+  /// No description provided for @txAuditFieldChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Changes'**
+  String get txAuditFieldChanges;
+
+  /// No description provided for @txAuditFieldType.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get txAuditFieldType;
+
+  /// No description provided for @txAuditLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load edit history'**
+  String get txAuditLoadFailed;
+
+  /// No description provided for @txAuditLoadMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Load more'**
+  String get txAuditLoadMore;
+
+  /// No description provided for @txAuditRecentSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'View cloud transaction edit history'**
+  String get txAuditRecentSubtitle;
+
+  /// No description provided for @txAuditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit history'**
+  String get txAuditTitle;
+
+  /// No description provided for @txAuditViewHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit history'**
+  String get txAuditViewHistory;
+
+  /// No description provided for @updateAvailableAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Update'**
+  String get updateAvailableAction;
+
+  /// No description provided for @updateAvailableBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'New version {version} available'**
+  String updateAvailableBanner(String version);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

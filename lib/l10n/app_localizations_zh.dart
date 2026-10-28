@@ -8673,6 +8673,170 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get transactionReceiptShareFailed => '分享失败，请重试。';
+
+  @override
+  String get adjustmentTransaction => '估值调整';
+
+  @override
+  String get cloudCollabDevicesPageTitle => '设备会话';
+
+  @override
+  String get cloudCollabDevicesPageSubtitle => '管理当前账号活跃设备';
+
+  @override
+  String get cloudCollabDevicesViewAllSessions => '显示全部会话';
+
+  @override
+  String get cloudCollabDevicesViewModeHint => '默认展示近 30 天去重设备，可切换查看全部会话。';
+
+  @override
+  String get cloudCollabNoDevices => '当前没有活跃设备';
+
+  @override
+  String get cloudCollabUnknownDeviceName => '未知设备';
+
+  @override
+  String get cloudCollabDeviceCurrentTag => '当前设备';
+
+  @override
+  String get cloudCollabCurrentDeviceCannotRevoke => '当前设备不能远程下线。';
+
+  @override
+  String cloudCollabDeviceAppVersion(String version) {
+    return '应用：$version';
+  }
+
+  @override
+  String cloudCollabDeviceOsVersion(String version) {
+    return '系统：$version';
+  }
+
+  @override
+  String cloudCollabDeviceModel(String model) {
+    return '型号：$model';
+  }
+
+  @override
+  String cloudCollabDeviceLastIp(String ip) {
+    return 'IP：$ip';
+  }
+
+  @override
+  String cloudCollabDeviceSessionCount(String count) {
+    return '会话数：$count';
+  }
+
+  @override
+  String cloudCollabDeviceLastSeen(String time) {
+    return '最近活跃：$time';
+  }
+
+  @override
+  String cloudCollabDeviceCreatedAt(String time) {
+    return '创建时间：$time';
+  }
+
+  @override
+  String get cloudCollabDeviceRevokeTitle => '远程下线设备';
+
+  @override
+  String cloudCollabDeviceRevokeMessage(String name, String id) {
+    return '确认下线设备 $name（$id）吗？';
+  }
+
+  @override
+  String cloudCollabDeviceRevokeMultipleMessage(String name, String count) {
+    return '确认下线设备 $name 的 $count 个会话吗？';
+  }
+
+  @override
+  String get cloudCollabDeviceRevoked => '设备已下线';
+
+  @override
+  String get cloudCollabUnavailableMessage => '云同步功能暂不可用。';
+
+  @override
+  String get cloudCollabScopeDeniedHint => '服务端尚未开启 ALLOW_APP_RW_SCOPES，当前设备会话不可用。';
+
+  @override
+  String get cloudCollabScopeDeniedAction => '请在服务端 .env 或部署环境中设置 ALLOW_APP_RW_SCOPES=true，重启服务后重新登录 App。';
+
+  @override
+  String get aiAudioModeMultimodal => '多模态理解';
+
+  @override
+  String get aiAudioModeMultimodalDesc => '音频直接交给大模型推理并直出账单，对口音更鲁棒，成本更高（需模型支持音频输入）';
+
+  @override
+  String get aiAudioModeTitle => '语音识别模式';
+
+  @override
+  String get aiAudioModeTranscription => '传统转写（STT）';
+
+  @override
+  String get aiAudioModeTranscriptionDesc => '先转文字再提取账单，成本低、速度快';
+
+  @override
+  String get aiReasoningHigh => '高';
+
+  @override
+  String get aiReasoningLow => '低';
+
+  @override
+  String get aiReasoningMedium => '中';
+
+  @override
+  String get aiReasoningOff => '关闭';
+
+  @override
+  String get aiReasoningTitle => '深度思考';
+
+  @override
+  String get txAuditActionCreate => '新增记录';
+
+  @override
+  String get txAuditActionDelete => '删除记录';
+
+  @override
+  String get txAuditActionUpdate => '修改记录';
+
+  @override
+  String get txAuditDeleteDetailMissing => '（历史删除记录未留存账单详情）';
+
+  @override
+  String get txAuditEmpty => '暂无修改记录';
+
+  @override
+  String get txAuditFieldAttribution => '归属';
+
+  @override
+  String get txAuditFieldChanges => '修改内容';
+
+  @override
+  String get txAuditFieldType => '类型';
+
+  @override
+  String get txAuditLoadFailed => '加载修改记录失败';
+
+  @override
+  String get txAuditLoadMore => '加载更多';
+
+  @override
+  String get txAuditRecentSubtitle => '查看云端账单修改历史';
+
+  @override
+  String get txAuditTitle => '修改记录';
+
+  @override
+  String get txAuditViewHistory => '修改记录';
+
+  @override
+  String get updateAvailableAction => '更新';
+
+  @override
+  String updateAvailableBanner(String version) {
+    return '发现新版本 $version';
+  }
 }
 
 /// The translations for Chinese, as used in Taiwan (`zh_TW`).
@@ -17277,5 +17441,130 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   @override
   String logExportCount(int count) {
     return '日誌數量：$count';
+  }
+
+  @override
+  String get adjustmentTransaction => '估值調整';
+
+  @override
+  String get cloudCollabDevicesPageTitle => '裝置工作階段';
+
+  @override
+  String get cloudCollabDevicesPageSubtitle => '管理目前帳號活躍裝置';
+
+  @override
+  String get cloudCollabDevicesViewAllSessions => '顯示全部工作階段';
+
+  @override
+  String get cloudCollabDevicesViewModeHint => '預設顯示近 30 天去重裝置，可切換檢視全部工作階段。';
+
+  @override
+  String get cloudCollabNoDevices => '目前沒有活躍裝置';
+
+  @override
+  String get cloudCollabUnknownDeviceName => '未知裝置';
+
+  @override
+  String get cloudCollabDeviceCurrentTag => '目前裝置';
+
+  @override
+  String get cloudCollabCurrentDeviceCannotRevoke => '目前裝置不能遠端下線。';
+
+  @override
+  String cloudCollabDeviceAppVersion(String version) {
+    return '應用：$version';
+  }
+
+  @override
+  String cloudCollabDeviceOsVersion(String version) {
+    return '系統：$version';
+  }
+
+  @override
+  String cloudCollabDeviceModel(String model) {
+    return '型號：$model';
+  }
+
+  @override
+  String cloudCollabDeviceLastIp(String ip) {
+    return 'IP：$ip';
+  }
+
+  @override
+  String cloudCollabDeviceSessionCount(String count) {
+    return '工作階段數：$count';
+  }
+
+  @override
+  String cloudCollabDeviceLastSeen(String time) {
+    return '最近活躍：$time';
+  }
+
+  @override
+  String cloudCollabDeviceCreatedAt(String time) {
+    return '建立時間：$time';
+  }
+
+  @override
+  String get cloudCollabDeviceRevokeTitle => '遠端下線裝置';
+
+  @override
+  String cloudCollabDeviceRevokeMessage(String name, String id) {
+    return '確認下線裝置 $name（$id）嗎？';
+  }
+
+  @override
+  String cloudCollabDeviceRevokeMultipleMessage(String name, String count) {
+    return '確認下線裝置 $name 的 $count 個工作階段嗎？';
+  }
+
+  @override
+  String get cloudCollabDeviceRevoked => '裝置已下線';
+
+  @override
+  String get cloudCollabUnavailableMessage => '雲端同步功能暫時不可用。';
+
+  @override
+  String get cloudCollabScopeDeniedHint => '伺服器尚未開啟 ALLOW_APP_RW_SCOPES，目前裝置工作階段不可用。';
+
+  @override
+  String get cloudCollabScopeDeniedAction => '請在伺服器 .env 或部署環境設定 ALLOW_APP_RW_SCOPES=true，重啟服務後重新登入 App。';
+
+  @override
+  String get aiAudioModeMultimodal => '多模態理解';
+
+  @override
+  String get aiAudioModeMultimodalDesc => '音訊直接交給大模型推理並直出帳單，對口音更穩健，成本較高（需模型支援音訊輸入）';
+
+  @override
+  String get aiAudioModeTitle => '語音辨識模式';
+
+  @override
+  String get aiAudioModeTranscription => '傳統轉寫（STT）';
+
+  @override
+  String get aiAudioModeTranscriptionDesc => '先轉文字再擷取帳單，成本低、速度快';
+
+  @override
+  String get aiReasoningHigh => '高';
+
+  @override
+  String get aiReasoningLow => '低';
+
+  @override
+  String get aiReasoningMedium => '中';
+
+  @override
+  String get aiReasoningOff => '關閉';
+
+  @override
+  String get aiReasoningTitle => '深度思考';
+
+  @override
+  String get updateAvailableAction => '更新';
+
+  @override
+  String updateAvailableBanner(String version) {
+    return '發現新版本 $version';
   }
 }
